@@ -1,0 +1,6 @@
+@noDoom_HostAddress = http://localhost:5115
+
+GET {{noDoom_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
