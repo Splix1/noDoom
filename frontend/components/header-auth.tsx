@@ -12,6 +12,7 @@ export default async function AuthButton() {
     data: { user },
   } = await supabase.auth.getUser();
 
+
   if (!hasEnvVars) {
     return (
       <>
@@ -50,12 +51,14 @@ export default async function AuthButton() {
   }
   return user ? (
     <div className="flex items-center gap-4">
-      Hey, {user.email}!
       <form action={signOutAction}>
         <Button type="submit" variant={"outline"}>
           Sign out
         </Button>
       </form>
+      <Button variant={"outline"}>
+        <Link href="/settings">Settings</Link>
+      </Button>
     </div>
   ) : (
     <div className="flex gap-2">
