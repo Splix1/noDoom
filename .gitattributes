@@ -1,0 +1,8 @@
+# Set default behavior to LF
+* text=auto eol=lf
+
+# Force CRLF for backend files
+backend/** text eol=crlf
+
+# Force LF for frontend files
+frontend/** text eol=lf 

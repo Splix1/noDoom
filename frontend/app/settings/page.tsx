@@ -9,7 +9,6 @@ export default async function SettingsPage() {
     data: { user },
   } = await supabase.auth.getUser();
   
-  // Add connection states
   const blueskyConnected = false; // TODO: Get actual connection state
   const redditConnected = false;  // TODO: Get actual connection state
 
@@ -29,7 +28,6 @@ export default async function SettingsPage() {
             <span className="text-sm text-muted-foreground">Not Connected</span>
           </div>
           <div className="flex items-center gap-4">
-            <Switch checked={blueskyConnected} />
             <button 
               className={`px-3 py-1 rounded-md text-sm ${
                 blueskyConnected 
@@ -39,6 +37,7 @@ export default async function SettingsPage() {
             >
               {blueskyConnected ? 'Disconnect' : 'Connect'}
             </button>
+            <Switch checked={blueskyConnected} />
           </div>
         </div>
 
@@ -49,7 +48,6 @@ export default async function SettingsPage() {
             <span className="text-sm text-muted-foreground">Not Connected</span>
           </div>
           <div className="flex items-center gap-4">
-            <Switch checked={redditConnected} />
             <button 
               className={`px-3 py-1 rounded-md text-sm ${
                 redditConnected 
@@ -59,6 +57,7 @@ export default async function SettingsPage() {
             >
               {redditConnected ? 'Disconnect' : 'Connect'}
             </button>
+            <Switch checked={redditConnected} />
           </div>
         </div>
 

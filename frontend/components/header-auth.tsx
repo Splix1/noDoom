@@ -12,7 +12,6 @@ export default async function AuthButton() {
     data: { user },
   } = await supabase.auth.getUser();
 
-
   if (!hasEnvVars) {
     return (
       <>
@@ -50,24 +49,30 @@ export default async function AuthButton() {
     );
   }
   return user ? (
-    <div className="flex items-center gap-4">
-      <form action={signOutAction}>
-        <Button type="submit" variant={"outline"}>
+    <div className="flex items-center gap-2">
+      <form action={signOutAction} className="flex-shrink-0">
+        <Button type="submit" variant={"outline"} size="sm" className="w-[80px]">
           Sign out
         </Button>
       </form>
-      <Button variant={"outline"}>
-        <Link href="/settings">Settings</Link>
-      </Button>
+      <div className="flex-shrink-0">
+        <Button variant={"outline"} size="sm" className="w-[80px]">
+          <Link href="/settings">Settings</Link>
+        </Button>
+      </div>
     </div>
   ) : (
-    <div className="flex gap-2">
-      <Button asChild size="sm" variant={"outline"}>
-        <Link href="/sign-in">Sign in</Link>
-      </Button>
-      <Button asChild size="sm" variant={"default"}>
-        <Link href="/sign-up">Sign up</Link>
-      </Button>
+    <div className="flex items-center gap-2">
+      <div className="flex-shrink-0">
+        <Button asChild size="sm" variant={"outline"} className="w-[80px]">
+          <Link href="/sign-in">Sign in</Link>
+        </Button>
+      </div>
+      <div className="flex-shrink-0">
+        <Button asChild size="sm" variant={"default"} className="w-[80px]">
+          <Link href="/sign-up">Sign up</Link>
+        </Button>
+      </div>
     </div>
   );
 }
