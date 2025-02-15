@@ -9,7 +9,7 @@ class User : BaseModel
     public int Id { get; set; }
 
     [Column("email")]
-    public string Email { get; set; }
+    public required string Email { get; set; }
 
     [Column("bluesky_show_following_only")]
     public bool BlueskyShowFollowingOnly { get; set; } = true;
