@@ -1,7 +1,7 @@
 using Supabase.Postgrest.Attributes;
 using Supabase.Postgrest.Models;
 
-[Table("users")]
+[Table("Users")]
 class User : BaseModel 
 {
 
