@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { createClient } from "@/utils/supabase/client";
 
 interface BlueskyConnectModalProps {
     isOpen: boolean;
@@ -14,29 +15,84 @@ interface BlueskyConnectModalProps {
 export function BlueskyConnectModal({ isOpen, onClose, onConnect }: BlueskyConnectModalProps) {
     const [identifier, setIdentifier] = useState('');
     const [password, setPassword] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const supabase = createClient();
+
+    const handleConnect = async () => {
+        try {
+            setIsLoading(true);
+            
+            // Get the session and user data
+            const { data: { session } } = await supabase.auth.getSession();
+            const { data: { user } } = await supabase.auth.getUser();
+
+            if (!session || !user) {
+                throw new Error('Not authenticated');
+            }
+
+            const requestBody = {
+                UserId: user.id.toLowerCase(),
+                Username: identifier,
+                AppPassword: password
+            };
+            
+            console.log('Request body:', requestBody);
+            console.log('Auth token:', session.access_token);
+
+            // Make the POST request to connect Bluesky
+            const response = await fetch('http://localhost:5115/api/bluesky/connect', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`,
+                    'Accept': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify(requestBody)
+            });
+
+            console.log('Response status:', response.status);
+            const responseText = await response.text();
+            console.log('Response body:', responseText);
+
+            if (!response.ok) {
+                throw new Error(responseText || 'Failed to connect Bluesky account');
+            }
+
+            onConnect();
+            onClose();
+        } catch (error) {
+            console.error('Error connecting Bluesky:', error);
+            alert(error instanceof Error ? error.message : 'Failed to connect Bluesky account');
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
                     <DialogTitle>Connect Bluesky Account</DialogTitle>
-                    <DialogDescription className="space-y-3 pt-3">
-                        <p>
-                            To connect your Bluesky account, you'll need to{' '}
-                            <a 
-                                href="https://bsky.app/settings/app-passwords" 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="text-primary hover:underline"
-                            >
-                                create an App Password
-                            </a>
-                            . Name it "noDoom".
-                        </p>
-                        
-                        <p className="text-sm font-medium text-yellow-600 dark:text-yellow-500">
-                            ⚠️ Do not use your main Bluesky account password. Only use the App Password.
-                        </p>
+                    <DialogDescription>
+                        <div className="space-y-3 pt-3">
+                            <div>
+                                To connect your Bluesky account, you'll need to{' '}
+                                <a 
+                                    href="https://bsky.app/settings/app-passwords" 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className="text-primary hover:underline"
+                                >
+                                    create an App Password
+                                </a>
+                                . Name it "noDoom".
+                            </div>
+                            
+                            <div className="text-sm font-medium text-yellow-600 dark:text-yellow-500">
+                                ⚠️ Do not use your main Bluesky account password. Only use the App Password.
+                            </div>
+                        </div>
                     </DialogDescription>
                 </DialogHeader>
 
@@ -70,8 +126,11 @@ export function BlueskyConnectModal({ isOpen, onClose, onConnect }: BlueskyConne
                     <Button variant="outline" onClick={onClose}>
                         Cancel
                     </Button>
-                    <Button onClick={onConnect}>
-                        Connect
+                    <Button 
+                        onClick={handleConnect} 
+                        disabled={isLoading}
+                    >
+                        {isLoading ? 'Connecting...' : 'Connect'}
                     </Button>
                 </div>
             </DialogContent>

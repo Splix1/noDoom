@@ -2,29 +2,26 @@ using Supabase.Postgrest.Attributes;
 using Supabase.Postgrest.Models;
 
 [Table("Connections")]
-class Connection : BaseModel {
-    
+public class Connection : BaseModel
+{
     [PrimaryKey("id", false)]
     public int Id { get; set; }
 
     [Column("user_id")]
-    public int UserId { get; set; }
+    public Guid UserId { get; set; }
     
     [Column("platform")]
-    public required string Platform { get; set; }
+    public string Platform { get; set; }
 
     [Column("access_token")]
-    public required string AccessToken { get; set; }
+    public string AccessToken { get; set; }
 
     [Column("refresh_token")]
-    public required string RefreshToken { get; set; }
-    
-    [Column("expires_at")]
-    public DateTime? ExpiresAt { get; set; }
+    public string RefreshToken { get; set; }
 
     [Column("DID")]
-    public required string DID { get; set; }
+    public string? DID { get; set; }
 
     [Column("handle")]
-    public required string Handle { get; set; }
+    public string? Handle { get; set; }
 }

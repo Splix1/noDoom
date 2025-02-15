@@ -1,3 +1,5 @@
+namespace noDoom.Models;
+
 public class BlueskyAuthResponse
 {
     public string AccessJwt { get; set; }

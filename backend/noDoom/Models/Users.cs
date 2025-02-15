@@ -6,10 +6,7 @@ class User : BaseModel
 {
 
     [PrimaryKey("id", false)]    
-    public int Id { get; set; }
-
-    [Column("email")]
-    public required string Email { get; set; }
+    public Guid Id { get; set; }
 
     [Column("bluesky_show_following_only")]
     public bool BlueskyShowFollowingOnly { get; set; } = true;

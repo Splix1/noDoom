@@ -6,15 +6,16 @@ import { useState } from 'react';
 
 interface BlueskyCardProps {
   isConnected: boolean;
+  handle: string | null;
 }
 
-export function BlueskyCard({ isConnected }: BlueskyCardProps) {
+export function BlueskyCard({ isConnected, handle }: BlueskyCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleConnect = async () => {
     if (isConnected) {
       // Call the disconnect server action
-      await fetch('/api/bluesky/disconnect', { method: 'POST' });
+      // await fetch('/api/bluesky/disconnect', { method: 'POST' });
       // Refresh the page to update the connection state
       window.location.reload();
     } else {
@@ -28,7 +29,7 @@ export function BlueskyCard({ isConnected }: BlueskyCardProps) {
         <div className="flex items-center gap-3 flex-1">
           <div className="text-2xl">🦋</div>
           <span className="text-sm text-muted-foreground">
-            {isConnected ? 'Connected' : 'Not Connected'}
+            {isConnected ? `Connected (${handle})` : 'Not Connected'}
           </span>
         </div>
         <div className="flex items-center gap-4">
@@ -42,7 +43,6 @@ export function BlueskyCard({ isConnected }: BlueskyCardProps) {
           >
             {isConnected ? 'Disconnect' : 'Connect'}
           </button>
-          <Switch checked={isConnected} />
         </div>
       </div>
 

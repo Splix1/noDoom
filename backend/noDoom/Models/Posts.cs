@@ -8,9 +8,9 @@ class Post : BaseModel {
     public int Id { get; set; }
 
     [Column("platform")]
-    public required string Platform { get; set; }
+    public string Platform { get; set; }
 
     [Column("URL")]
-    public required string URL { get; set; }
+    public string URL { get; set; }
     
 }
