@@ -1,6 +1,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import { Switch } from "@/components/ui/switch";
+import { ThemeSwitcher } from "@/components/theme-switcher";
 
 export default async function SettingsPage() {
   const supabase = await createClient();
@@ -69,6 +70,15 @@ export default async function SettingsPage() {
             <Switch />
           </div>
         </div>
+
+        {/* Theme Switcher */}
+        <div className="flex items-center p-4 bg-card rounded-lg border w-[600px]">
+          <span className="text-sm flex-1">Theme</span>
+          <div className="ml-8">
+            <ThemeSwitcher />
+          </div>
+        </div>
+
       </div>
     </div>
   );
