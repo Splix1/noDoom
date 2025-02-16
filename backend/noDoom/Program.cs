@@ -15,6 +15,18 @@ string jwtSecretKey = builder.Configuration["Supabase:JWT-secret"];
 
 builder.Services.AddControllers();
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:3000") 
+                  .AllowAnyMethod()
+                  .AllowAnyHeader()
+                  .AllowCredentials();
+        });
+});
+
 var supabaseOptions = new Supabase.SupabaseOptions
 {
     AutoConnectRealtime = true
@@ -25,8 +37,9 @@ await supabaseClient.InitializeAsync();
 
 builder.Services.AddSingleton(supabaseClient);
 
+builder.Services.AddHttpClient();
 
-// Add authentication
+
 
 var bytes = Encoding.UTF8.GetBytes(jwtSecretKey!);
 
@@ -44,14 +57,20 @@ builder.Services.AddAuthentication().AddJwtBearer(options =>
     };
 });
 
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 
-app.UseHttpsRedirection();
+// Commented out for local development
+// app.UseHttpsRedirection();
 
+app.UseCors("AllowFrontend");
+
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers().RequireAuthorization();
+
 
 app.Run();

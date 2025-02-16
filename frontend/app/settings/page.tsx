@@ -18,11 +18,12 @@ export default async function SettingsPage() {
 
   // Get connection states from database
   const { data: connections } = await supabase
-    .from('connections')
-    .select('platform')
+    .from('Connections')
+    .select('platform, handle')
     .eq('user_id', user.id);
 
   const blueskyConnected = connections?.some(c => c.platform === 'bluesky') ?? false;
+  const blueskyHandle = connections?.find(c => c.platform === 'bluesky' && c.handle !== null)?.handle;
   const redditConnected = connections?.some(c => c.platform === 'reddit') ?? false;
 
   return (
@@ -30,7 +31,7 @@ export default async function SettingsPage() {
       <h1 className="text-2xl font-semibold">Connections</h1>
       
       <div className="flex flex-col gap-4">
-        <BlueskyCard isConnected={blueskyConnected} />
+        <BlueskyCard isConnected={blueskyConnected} handle={blueskyHandle} />
         <RedditCard isConnected={redditConnected} />
 
         <h1 className="text-2xl font-semibold">User Settings</h1>

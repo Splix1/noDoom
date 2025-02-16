@@ -35,7 +35,6 @@ export function RedditCard({ isConnected }: RedditCardProps) {
         >
           {isConnected ? 'Disconnect' : 'Connect'}
         </button>
-        <Switch checked={isConnected} />
       </div>
     </div>
   );
