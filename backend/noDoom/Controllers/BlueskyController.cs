@@ -52,6 +52,37 @@ namespace noDoom.Controllers
                 return BadRequest(new { message = "Failed to connect to Bluesky." });
             }
         }
+
+        [HttpDelete("disconnect")]
+        public async Task<IActionResult> Disconnect()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized(new { message = "User not authenticated" });
+            }
+            
+            try {
+
+                // Unable to pass Guid.Parse in Where clause due to Supabase C# library not being able to parse it correctly
+                var parsedUserId = Guid.Parse(userId);
+                
+                await _supabaseClient
+                    .From<Connection>()
+                    .Where(x => x.UserId == parsedUserId && x.Platform == "bluesky")
+                    .Delete();
+                    
+                return Ok(new { message = "Bluesky account disconnected successfully!" });
+            } catch (Exception ex) {
+                Console.WriteLine($"Bluesky disconnect error: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                if (ex.InnerException != null) {
+                    Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                }
+                return BadRequest(new { message = "Failed to disconnect from Bluesky." });
+            }
+        }
     }
 }
 

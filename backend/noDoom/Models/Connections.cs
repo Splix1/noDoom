@@ -1,6 +1,8 @@
 using Supabase.Postgrest.Attributes;
 using Supabase.Postgrest.Models;
 
+namespace noDoom.Models;
+
 [Table("Connections")]
 public class Connection : BaseModel
 {

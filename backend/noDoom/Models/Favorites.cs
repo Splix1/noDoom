@@ -1,3 +1,5 @@
+namespace noDoom.Models;
+
 using Supabase.Postgrest.Attributes;
 using Supabase.Postgrest.Models;
 
