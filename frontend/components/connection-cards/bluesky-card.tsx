@@ -26,11 +26,18 @@ export function BlueskyCard({ isConnected, handle }: BlueskyCardProps) {
   return (
     <>
       <div className="flex items-center p-4 bg-card rounded-lg border w-[600px]">
-        <div className="flex items-center gap-3 flex-1">
-          <div className="text-2xl">🦋</div>
-          <span className="text-sm text-muted-foreground">
-            {isConnected ? `Connected (${handle})` : 'Not Connected'}
-          </span>
+        <div className="flex flex-col flex-1">
+          <div className="flex items-center gap-3">
+            <div className="text-2xl">🦋</div>
+            <span className="text-sm text-muted-foreground">
+              {isConnected ? `Connected (${handle})` : 'Not Connected'}
+            </span>
+          </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            {isConnected 
+              ? "You can revoke access anytime by disconnecting here or deleting the App Password on Bluesky."
+              : "App Passwords provide limited API access for specific applications. The password you create will only be used by noDoom to post updates."}
+          </p>
         </div>
         <div className="flex items-center gap-4">
           <button 
