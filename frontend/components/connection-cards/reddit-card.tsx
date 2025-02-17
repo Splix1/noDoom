@@ -4,6 +4,7 @@ import { Switch } from "@/components/ui/switch";
 
 interface RedditCardProps {
   isConnected: boolean;
+  onDisconnect?: () => void;
 }
 
 export function RedditCard({ isConnected }: RedditCardProps) {

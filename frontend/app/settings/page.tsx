@@ -30,6 +30,7 @@ export default async function SettingsPage() {
     <div className="flex-1 w-full flex flex-col gap-4 px-4">
       <h1 className="text-2xl font-semibold">Connections</h1>
       
+      {/* Connections Section */}
       <div className="flex flex-col gap-4">
         <BlueskyCard isConnected={blueskyConnected} handle={blueskyHandle} />
         <RedditCard isConnected={redditConnected} />
