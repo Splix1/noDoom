@@ -9,7 +9,7 @@ import { createClient } from "@/utils/supabase/client";
 interface BlueskyConnectModalProps {
     isOpen: boolean;
     onClose: () => void;
-    onConnect: () => void;
+    onConnect: (handle: string) => void;
 }
 
 export function BlueskyConnectModal({ isOpen, onClose, onConnect }: BlueskyConnectModalProps) {
@@ -59,7 +59,7 @@ export function BlueskyConnectModal({ isOpen, onClose, onConnect }: BlueskyConne
                 throw new Error(responseText || 'Failed to connect Bluesky account');
             }
 
-            onConnect();
+            onConnect(identifier);
             onClose();
         } catch (error) {
             console.error('Error connecting Bluesky:', error);

@@ -1,23 +1,48 @@
 'use client';
-
-import { Switch } from "@/components/ui/switch";
 import { BlueskyConnectModal } from '@/components/bluesky-connect-modal';
 import { useState } from 'react';
+import { createClient } from '@/utils/supabase/client';
 
 interface BlueskyCardProps {
   isConnected: boolean;
   handle: string | null;
+  onDisconnect?: () => void;
 }
 
-export function BlueskyCard({ isConnected, handle }: BlueskyCardProps) {
+export function BlueskyCard({ isConnected: initialIsConnected, handle: initialHandle }: BlueskyCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isConnected, setIsConnected] = useState(initialIsConnected);
+  const [handle, setHandle] = useState(initialHandle);
+  const supabase = createClient();
 
   const handleConnect = async () => {
     if (isConnected) {
-      // Call the disconnect server action
-      // await fetch('/api/bluesky/disconnect', { method: 'POST' });
-      // Refresh the page to update the connection state
-      window.location.reload();
+      try {
+        // Get the session data
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          throw new Error('Not authenticated');
+        }
+
+        const response = await fetch('http://localhost:5115/api/bluesky/disconnect', { 
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+        });
+
+        if (response.ok) {
+          setIsConnected(false);
+          setHandle(null);
+        } else {
+          console.error('Failed to disconnect from Bluesky');
+        }
+      } catch (error) {
+        console.error('Failed to disconnect from Bluesky:', error);
+      }
     } else {
       setIsModalOpen(true);
     }
@@ -36,7 +61,7 @@ export function BlueskyCard({ isConnected, handle }: BlueskyCardProps) {
           <p className="text-xs text-muted-foreground mt-2">
             {isConnected 
               ? "You can revoke access anytime by disconnecting here or deleting the App Password on Bluesky."
-              : "App Passwords provide limited API access for specific applications. The password you create will only be used by noDoom to post updates."}
+              : "App Passwords provide limited API access for specific applications. The password you create will only be used by noDoom to fetch your feed."}
           </p>
         </div>
         <div className="flex items-center gap-4">
@@ -56,9 +81,10 @@ export function BlueskyCard({ isConnected, handle }: BlueskyCardProps) {
       <BlueskyConnectModal 
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onConnect={async () => {
-          // Refresh the page after successful connection
-          window.location.reload();
+        onConnect={async (newHandle: string) => {
+          setIsConnected(true);
+          setHandle(newHandle);
+          setIsModalOpen(false);
         }}
       />
     </>
