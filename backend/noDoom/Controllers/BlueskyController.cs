@@ -102,6 +102,58 @@ namespace noDoom.Controllers
                 return BadRequest(new { message = "Failed to disconnect from Bluesky." });
             }
         }
+
+        [HttpGet("timeline")]
+        public async Task<IActionResult> GetTimeline()
+        {
+            try {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized(new { message = "User not authenticated" });
+                }
+
+                // Get the user's Bluesky connection
+                var parsedUserId = Guid.Parse(userId);
+                var connection = await _supabaseClient
+                    .From<Connection>()
+                    .Where(x => x.UserId == parsedUserId && x.Platform == "bluesky")
+                    .Single();
+
+                if (connection == null)
+                {
+                    return BadRequest(new { message = "No Bluesky connection found" });
+                }
+
+                // Set up the request to Bluesky
+                _httpClient.DefaultRequestHeaders.Clear();
+                _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", connection.AccessToken);
+
+                // Make the request to get the timeline
+                var response = await _httpClient.GetAsync("https://bsky.social/xrpc/app.bsky.feed.getTimeline");
+                
+                if (!response.IsSuccessStatusCode)
+                {
+                    var errorContent = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"Failed to fetch Bluesky timeline: {response.StatusCode}");
+                    Console.WriteLine($"Error content: {errorContent}");
+                    return BadRequest(new { message = "Failed to fetch Bluesky timeline" });
+                }
+
+                var timeline = await response.Content.ReadFromJsonAsync<BlueskyTimelineResponse>();
+                return Ok(timeline);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Bluesky timeline error: {ex.Message}");
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                }
+                return BadRequest(new { message = "Failed to fetch Bluesky timeline" });
+            }
+        }
     }
 }
 

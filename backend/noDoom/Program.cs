@@ -3,6 +3,8 @@ using Supabase;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using noDoom.Controllers;
+using noDoom.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -35,11 +37,11 @@ var supabaseOptions = new Supabase.SupabaseOptions
 var supabaseClient = new Supabase.Client(supabaseUrl, supabaseKey, supabaseOptions);
 await supabaseClient.InitializeAsync();
 
+
 builder.Services.AddSingleton(supabaseClient);
-
-builder.Services.AddHttpClient();
-
-
+builder.Services.AddScoped<IBlueskyService, BlueskyService>();
+builder.Services.AddHttpClient<BlueskyService>();
+builder.Services.AddScoped<BlueskyController>();
 
 var bytes = Encoding.UTF8.GetBytes(jwtSecretKey!);
 
