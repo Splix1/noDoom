@@ -64,10 +64,30 @@ namespace noDoom.Controllers
             }
             
             try {
-
-                // Unable to pass Guid.Parse in Where clause due to Supabase C# library not being able to parse it correctly
+                // Get the connection first to get the access token
                 var parsedUserId = Guid.Parse(userId);
-                
+                var connection = await _supabaseClient
+                    .From<Connection>()
+                    .Where(x => x.UserId == parsedUserId && x.Platform == "bluesky")
+                    .Single();
+
+                if (connection != null)
+                {
+                    // Call Bluesky's deleteSession endpoint with refresh token
+                    _httpClient.DefaultRequestHeaders.Clear();
+                    _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", connection.RefreshToken);
+                    var response = await _httpClient.PostAsync("https://bsky.social/xrpc/com.atproto.server.deleteSession", null);
+                    
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        var content = await response.Content.ReadAsStringAsync();
+                        Console.WriteLine($"Failed to delete Bluesky session: {response.StatusCode}");
+                        Console.WriteLine($"Response content: {content}");
+                        return BadRequest(new { message = "Failed to disconnect from Bluesky." });
+                    }
+                }
+
+                // Delete the connection from Supabase
                 await _supabaseClient
                     .From<Connection>()
                     .Where(x => x.UserId == parsedUserId && x.Platform == "bluesky")
@@ -76,7 +96,6 @@ namespace noDoom.Controllers
                 return Ok(new { message = "Bluesky account disconnected successfully!" });
             } catch (Exception ex) {
                 Console.WriteLine($"Bluesky disconnect error: {ex.Message}");
-                Console.WriteLine($"Stack trace: {ex.StackTrace}");
                 if (ex.InnerException != null) {
                     Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
                 }
