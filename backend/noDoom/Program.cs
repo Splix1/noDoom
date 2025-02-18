@@ -3,6 +3,8 @@ using Supabase;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using StackExchange.Redis;
+using noDoom.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -39,7 +41,10 @@ builder.Services.AddSingleton(supabaseClient);
 
 builder.Services.AddHttpClient();
 
-
+// Add Redis configuration
+var redisConnection = ConnectionMultiplexer.Connect(builder.Configuration["Redis:ConnectionString"]);
+builder.Services.AddSingleton<IConnectionMultiplexer>(redisConnection);
+builder.Services.AddSingleton<IRedisService, RedisService>();
 
 var bytes = Encoding.UTF8.GetBytes(jwtSecretKey!);
 
