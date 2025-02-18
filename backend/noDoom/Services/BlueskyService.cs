@@ -1,4 +1,5 @@
 using noDoom.Models;
+using Microsoft.Extensions.Logging;
 
 namespace noDoom.Services;
 public interface IBlueskyService
@@ -9,23 +10,40 @@ public interface IBlueskyService
 public class BlueskyService : IBlueskyService
 {
     private readonly HttpClient _httpClient;
+    private readonly ILogger<BlueskyService> _logger;
 
-    public BlueskyService(HttpClient httpClient)
+    public BlueskyService(HttpClient httpClient, ILogger<BlueskyService> logger)
     {
         _httpClient = httpClient;
+        _logger = logger;
     }
 
     public async Task<List<UnifiedPost>> GetTimelinePostsAsync(string accessToken)
     {
-        _httpClient.DefaultRequestHeaders.Clear();
-        _httpClient.DefaultRequestHeaders.Authorization = 
-            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+        try
+        {
+            _logger.LogInformation("Fetching Bluesky timeline");
+            _httpClient.DefaultRequestHeaders.Clear();
+            _httpClient.DefaultRequestHeaders.Authorization = 
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
 
-        var response = await _httpClient.GetAsync("https://bsky.social/xrpc/app.bsky.feed.getTimeline?limit=15");
-        if (!response.IsSuccessStatusCode) throw new Exception("Failed to fetch timeline");
+            var response = await _httpClient.GetAsync("https://bsky.social/xrpc/app.bsky.feed.getTimeline?limit=15");
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                _logger.LogError("Failed to fetch Bluesky timeline. Status: {StatusCode}, Error: {Error}", 
+                    response.StatusCode, error);
+                throw new Exception("Failed to fetch timeline");
+            }
 
-        var blueskyTimeline = await response.Content.ReadFromJsonAsync<BlueskyTimelineResponse>();
-        return await EnrichPostsWithMetrics(blueskyTimeline);
+            var blueskyTimeline = await response.Content.ReadFromJsonAsync<BlueskyTimelineResponse>();
+            return await EnrichPostsWithMetrics(blueskyTimeline);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching Bluesky timeline");
+            throw;
+        }
     }
 
     private async Task<List<UnifiedPost>> EnrichPostsWithMetrics(BlueskyTimelineResponse timeline)
