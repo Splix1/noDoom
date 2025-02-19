@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { FaReddit } from "react-icons/fa";
 import { SiBluesky } from "react-icons/si";
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
@@ -223,44 +224,74 @@ export default function TimelinePage() {
   }, []);
   
   return (
-    <div className="flex-1 w-full max-w-5xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold">Daily Feed</h1>
+    <div className="flex-1 w-full max-w-7xl mx-auto px-4">
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-3xl font-bold">Daily Feed</h1>
+        <span className="text-muted-foreground">
+          {currentSlide} of {posts.length}
+        </span>
       </div>
       
       <Swiper
         modules={[Navigation, Pagination, Keyboard]}
-        spaceBetween={30}
+        spaceBetween={40}
         slidesPerView={1}
-        navigation
+        navigation={true}
         keyboard={{
           enabled: true,
           onlyInViewport: true,
         }}
-        pagination={{ clickable: true }}
-        className="w-full h-[600px] [&_.swiper-pagination-bullet]:bg-foreground/50 [&_.swiper-pagination-bullet-active]:bg-foreground"
+        pagination={{ 
+          clickable: true,
+          bulletActiveClass: 'swiper-pagination-bullet-active',
+          bulletClass: 'swiper-pagination-bullet'
+        }}
+        className="w-full h-[calc(100vh-12rem)] relative"
         onSlideChange={(swiper) => setCurrentSlide(swiper.activeIndex + 1)}
       >
         {posts.map((post) => (
           <SwiperSlide key={post.id}>
-            <div className="flex flex-col h-full bg-card rounded-lg border p-6">
-              <div className="flex justify-between items-center mb-4">
-                <div className="flex items-center gap-2">
-                  <PlatformIcon platform={post.platform} />
-                  <h2 className="text-xl font-medium">{post.authorName}</h2>
+            <div className="flex flex-col h-full bg-card rounded-xl border shadow-sm p-8">
+              <div className="swiper-button-prev absolute top-1/2 -left-16 -translate-y-1/2 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-card border shadow-md cursor-pointer after:hidden">
+                <ChevronLeft className="h-6 w-6" />
+              </div>
+              <div className="swiper-button-next absolute top-1/2 -right-16 -translate-y-1/2 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-card border shadow-md cursor-pointer after:hidden">
+                <ChevronRight className="h-6 w-6" />
+              </div>
+
+              <div className="flex justify-between items-start mb-6">
+                <div className="flex items-center gap-4">
+                  <div className="relative">
+                    {post.authorAvatar && (
+                      <Image
+                        src={post.authorAvatar}
+                        alt={`${post.authorName}'s profile`}
+                        width={48}
+                        height={48}
+                        className="rounded-full object-cover"
+                      />
+                    )}
+                    <div className="absolute -bottom-2 -right-2">
+                      <PlatformIcon platform={post.platform} />
+                    </div>
+                  </div>
+                  <div className="flex flex-col">
+                    <h2 className="text-xl font-semibold">{post.authorName}</h2>
+                    <span className="text-sm text-muted-foreground">@{post.authorHandle}</span>
+                  </div>
                 </div>
                 <span className="text-sm text-muted-foreground">{post.createdAt}</span>
               </div>
               
-              <div className="flex-1">
-                <p className="text-foreground/80">{post.content}</p>
+              <div className="flex-1 mb-6">
+                <p className="text-lg leading-relaxed">{post.content}</p>
               </div>
               
               {post.media && (
-                <div className="mb-4 relative w-full h-[300px] rounded-lg overflow-hidden">
+                <div className="mb-6 relative w-full h-[400px] rounded-xl overflow-hidden bg-muted">
                   {post.media.type === 'image' ? (
                     <Image
-                      src={post.media?.url}
+                      src={post.media.url}
                       alt={post.content}
                       fill
                       className="object-contain"
@@ -268,31 +299,13 @@ export default function TimelinePage() {
                     />
                   ) : (
                     <video
-                      src={post.media?.url}
+                      src={post.media.url}
                       controls
                       className="w-full h-full object-contain"
                     />
                   )}
                 </div>
               )}
-              
-              
-              <div className="mt-4 flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                  {post.authorAvatar ? (
-                    <Image
-                      src={post.authorAvatar}
-                      alt={`${post.authorName}'s profile`}
-                      width={32}
-                      height={32}
-                      className="rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-8 h-8 rounded-full bg-primary/10" />
-                  )}
-                  <span className="text-sm font-medium">{post.authorName}</span>
-                </div>
-              </div>
             </div>
           </SwiperSlide>
         ))}
