@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using Supabase;
 using noDoom.Models;
 using System.Security.Claims;
+using Microsoft.Extensions.Logging;
+using noDoom.Services;
 namespace noDoom.Controllers
 {
     [ApiController]
@@ -10,11 +12,19 @@ namespace noDoom.Controllers
     {
         private readonly HttpClient _httpClient;
         private readonly Client _supabaseClient;
+        private readonly IRedisService _redisService;
+        private readonly ILogger<BlueskyController> _logger;
 
-        public BlueskyController(IHttpClientFactory httpClientFactory, Client supabaseClient)
+        public BlueskyController(
+            IHttpClientFactory httpClientFactory, 
+            Client supabaseClient,
+            IRedisService redisService,
+            ILogger<BlueskyController> logger)
         {
             _httpClient = httpClientFactory.CreateClient();
             _supabaseClient = supabaseClient;
+            _redisService = redisService;
+            _logger = logger;
         }
 
         [HttpPost("connect")]
@@ -32,6 +42,14 @@ namespace noDoom.Controllers
                 var response = await _httpClient.PostAsJsonAsync("https://bsky.social/xrpc/com.atproto.server.createSession", new { identifier = credentials.Username, password = credentials.AppPassword });
                 var authData = await response.Content.ReadFromJsonAsync<BlueskyAuthResponse>();
                 
+                // Cache tokens in Redis
+                await _redisService.SetTokensAsync(
+                    authData.Did, 
+                    authData.AccessJwt, 
+                    authData.RefreshJwt, 
+                    TimeSpan.FromDays(1)
+                );
+
                 var newConnection = new Connection {
                     Platform = "bluesky",
                     AccessToken = authData.AccessJwt,

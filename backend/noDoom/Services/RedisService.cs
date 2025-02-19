@@ -8,6 +8,9 @@ public interface IRedisService
     Task<T?> GetAsync<T>(string key);
     Task SetAsync<T>(string key, T value, TimeSpan? expiry = null);
     Task RemoveAsync(string key);
+    Task<string?> GetAccessTokenAsync(string did);
+    Task<string?> GetRefreshTokenAsync(string did);
+    Task SetTokensAsync(string did, string accessToken, string refreshToken, TimeSpan? expiry = null);
 }
 
 public class RedisService : IRedisService
@@ -36,5 +39,21 @@ public class RedisService : IRedisService
     public async Task RemoveAsync(string key)
     {
         await _db.KeyDeleteAsync(key);
+    }
+
+    public async Task<string?> GetAccessTokenAsync(string did)
+    {
+        return await GetAsync<string>($"bluesky_access_token:{did}");
+    }
+
+    public async Task<string?> GetRefreshTokenAsync(string did)
+    {
+        return await GetAsync<string>($"bluesky_refresh_token:{did}");
+    }
+
+    public async Task SetTokensAsync(string did, string accessToken, string refreshToken, TimeSpan? expiry = null)
+    {
+        await SetAsync($"bluesky_access_token:{did}", accessToken, expiry);
+        await SetAsync($"bluesky_refresh_token:{did}", refreshToken, expiry);
     }
 } 

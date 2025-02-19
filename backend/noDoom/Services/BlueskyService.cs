@@ -6,29 +6,32 @@ using System.Linq;
 namespace noDoom.Services;
 public interface IBlueskyService
 {
-    Task<List<UnifiedPost>> GetTimelinePostsAsync(string accessToken);
+    Task<List<UnifiedPost>> GetTimelinePostsAsync(string accessToken, string did, string refreshToken);
 }
 
 public class BlueskyService : IBlueskyService
 {
     private readonly HttpClient _httpClient;
     private readonly ILogger<BlueskyService> _logger;
+    private readonly IRedisService _redisService;
 
-    public BlueskyService(HttpClient httpClient, ILogger<BlueskyService> logger)
+    public BlueskyService(HttpClient httpClient, ILogger<BlueskyService> logger, IRedisService redisService)
     {
         _httpClient = httpClient;
         _logger = logger;
+        _redisService = redisService;
     }
 
-    public async Task<List<UnifiedPost>> GetTimelinePostsAsync(string accessToken)
+    public async Task<List<UnifiedPost>> GetTimelinePostsAsync(string accessToken, string did, string refreshToken)
     {
         try
         {
-            _logger.LogInformation("Fetching Bluesky timeline");
+            var validToken = await RefreshTokenIfNeededAsync(accessToken, did, refreshToken);
             _httpClient.DefaultRequestHeaders.Clear();
             _httpClient.DefaultRequestHeaders.Authorization = 
-                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", validToken);
 
+            _logger.LogInformation("Fetching Bluesky timeline");
             var response = await _httpClient.GetAsync("https://bsky.social/xrpc/app.bsky.feed.getTimeline?limit=15");
             if (!response.IsSuccessStatusCode)
             {
@@ -107,5 +110,45 @@ public class BlueskyService : IBlueskyService
             ThumbnailUrl = imageUrl,
             Description = image.Alt
         };
+    }
+
+    private async Task<string> RefreshTokenIfNeededAsync(string accessToken, string did, string refreshToken)
+    {
+        try
+        {
+            // Try the current token first
+            _httpClient.DefaultRequestHeaders.Authorization = 
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+            var testResponse = await _httpClient.GetAsync("https://bsky.social/xrpc/app.bsky.actor.getProfile");
+            
+            if (testResponse.IsSuccessStatusCode)
+            {
+                return accessToken;
+            }
+
+            // If we get here, token needs refresh
+            if (string.IsNullOrEmpty(refreshToken))
+            {
+                throw new UnauthorizedAccessException("No refresh token found");
+            }
+
+            _httpClient.DefaultRequestHeaders.Authorization = 
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", refreshToken);
+            
+            var response = await _httpClient.PostAsync("https://bsky.social/xrpc/com.atproto.server.refreshSession", null);
+            
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new UnauthorizedAccessException("Failed to refresh token");
+            }
+
+            var authData = await response.Content.ReadFromJsonAsync<BlueskyAuthResponse>();
+            return authData.AccessJwt;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error refreshing token");
+            throw;
+        }
     }
 }
