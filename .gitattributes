@@ -1,3 +1,12 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Force specific line endings for certain file types
+*.json text eol=lf
+*.csproj text eol=lf
+*.cs text eol=lf
+*.sln text eol=crlf
+
 # Set default behavior to LF
 * text=auto eol=lf
 
