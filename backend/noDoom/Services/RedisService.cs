@@ -11,6 +11,8 @@ public interface IRedisService
     Task<string?> GetAccessTokenAsync(string did);
     Task<string?> GetRefreshTokenAsync(string did);
     Task SetTokensAsync(string did, string accessToken, string refreshToken, TimeSpan? expiry = null);
+    Task CacheTimelinePostsAsync(string userId, string tab, List<UnifiedPost> posts);
+    Task<List<UnifiedPost>?> GetCachedTimelinePostsAsync(string userId, string tab);
 }
 
 public class RedisService : IRedisService
@@ -55,5 +57,15 @@ public class RedisService : IRedisService
     {
         await SetAsync($"bluesky_access_token:{did}", accessToken, expiry);
         await SetAsync($"bluesky_refresh_token:{did}", refreshToken, expiry);
+    }
+
+    public async Task CacheTimelinePostsAsync(string userId, string tab, List<UnifiedPost> posts)
+    {
+        await SetAsync($"{userId}:{tab}", posts, TimeSpan.FromHours(6));
+    }
+
+    public async Task<List<UnifiedPost>?> GetCachedTimelinePostsAsync(string userId, string tab)
+    {
+        return await GetAsync<List<UnifiedPost>>($"{userId}:{tab}");
     }
 } 
