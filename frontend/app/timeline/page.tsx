@@ -270,63 +270,67 @@ export default function TimelinePage() {
                 <ChevronRight className="h-6 w-6" />
               </div>
 
-              <div className="flex justify-between items-start mb-6">
-                <div className="flex items-center gap-4">
-                  <div className="relative">
-                    {post.authorAvatar && (
-                      <Image
-                        src={post.authorAvatar}
-                        alt={`${post.authorName}'s profile`}
-                        width={48}
-                        height={48}
-                        className="rounded-full object-cover"
-                      />
-                    )}
-                    <div className="absolute -bottom-2 -right-2">
-                      <PlatformIcon platform={post.platform} />
+              <div className="flex flex-col h-full">
+                <div className="flex justify-between items-start mb-6">
+                  <div className="flex items-center gap-4">
+                    <div className="relative">
+                      {post.authorAvatar && (
+                        <Image
+                          src={post.authorAvatar}
+                          alt={`${post.authorName}'s profile`}
+                          width={48}
+                          height={48}
+                          className="rounded-full object-cover"
+                        />
+                      )}
+                      <div className="absolute -bottom-2 -right-2">
+                        <PlatformIcon platform={post.platform} />
+                      </div>
+                    </div>
+                    <div className="flex flex-col">
+                      <h2 className="text-xl font-semibold">{post.authorName}</h2>
+                      <span className="text-sm text-muted-foreground">@{post.authorHandle}</span>
                     </div>
                   </div>
-                  <div className="flex flex-col">
-                    <h2 className="text-xl font-semibold">{post.authorName}</h2>
-                    <span className="text-sm text-muted-foreground">@{post.authorHandle}</span>
+                  <span className="text-sm text-muted-foreground">{post.createdAt}</span>
+                </div>
+
+                <div className={`flex-1 flex flex-col ${!post.media ? 'justify-center items-center' : ''}`}>
+                  <div className={`${!post.media ? 'max-w-2xl text-center' : ''}`}>
+                    <div className={`text-lg leading-relaxed ${!expandedPosts.has(post.id) ? 'line-clamp-4' : ''}`}>
+                      {post.content}
+                    </div>
+                    {post.content.split(' ').length > 50 && (
+                      <button
+                        onClick={() => togglePostExpansion(post.id)}
+                        className="mt-2 text-sm text-primary hover:underline"
+                      >
+                        {expandedPosts.has(post.id) ? 'Show less' : 'Show more'}
+                      </button>
+                    )}
                   </div>
-                </div>
-                <span className="text-sm text-muted-foreground">{post.createdAt}</span>
-              </div>
-              
-              <div className="flex-1 mb-6">
-                <div className={`text-lg leading-relaxed ${!expandedPosts.has(post.id) ? 'line-clamp-4' : ''}`}>
-                  {post.content}
-                </div>
-                {post.content.split(' ').length > 50 && (
-                  <button
-                    onClick={() => togglePostExpansion(post.id)}
-                    className="mt-2 text-sm text-primary hover:underline"
-                  >
-                    {expandedPosts.has(post.id) ? 'Show less' : 'Show more'}
-                  </button>
-                )}
-              </div>
-              
-              {post.media && (
-                <div className="mb-6 relative w-full h-[400px] rounded-xl overflow-hidden bg-background/50">
-                  {post.media.type === 'image' ? (
-                    <Image
-                      src={post.media.url}
-                      alt={post.content}
-                      fill
-                      className="object-contain"
-                      sizes="(max-width: 1280px) 100vw, 1024px"
-                    />
-                  ) : (
-                    <video
-                      src={post.media.url}
-                      controls
-                      className="w-full h-full object-contain"
-                    />
+
+                  {post.media && (
+                    <div className="mt-6 relative w-full h-[400px] rounded-xl overflow-hidden bg-background/50">
+                      {post.media.type === 'image' ? (
+                        <Image
+                          src={post.media.url}
+                          alt={post.content}
+                          fill
+                          className="object-contain"
+                          sizes="(max-width: 1280px) 100vw, 1024px"
+                        />
+                      ) : (
+                        <video
+                          src={post.media.url}
+                          controls
+                          className="w-full h-full object-contain"
+                        />
+                      )}
+                    </div>
                   )}
                 </div>
-              )}
+              </div>
             </div>
           </SwiperSlide>
         ))}
