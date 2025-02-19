@@ -37,9 +37,13 @@ var supabaseOptions = new Supabase.SupabaseOptions
 var supabaseClient = new Supabase.Client(supabaseUrl, supabaseKey, supabaseOptions);
 await supabaseClient.InitializeAsync();
 
+
 builder.Services.AddSingleton(supabaseClient);
 
-builder.Services.AddHttpClient();
+builder.Services.AddHttpClient<IBlueskyService, BlueskyService>(client =>
+{
+    client.BaseAddress = new Uri("https://cdn.bsky.app/");
+});
 
 // Add Redis configuration
 var redisConnection = ConnectionMultiplexer.Connect(builder.Configuration["Redis:ConnectionString"]);

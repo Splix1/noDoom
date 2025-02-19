@@ -45,7 +45,7 @@ export const updateSession = async (request: NextRequest) => {
     }
 
     if (request.nextUrl.pathname === "/" && !user.error) {
-      return NextResponse.redirect(new URL("/feed", request.url));
+      return NextResponse.redirect(new URL("/timeline", request.url));
     }
 
     return response;
