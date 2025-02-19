@@ -184,6 +184,24 @@ const PlatformIcon = ({ platform }: { platform: Platform }) => {
   }
 };
 
+const formatTimeAgo = (dateString: string) => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+  const months = Math.floor(days / 30);
+  const years = Math.floor(days / 365);
+
+  if (years > 0) return `${years}y`;
+  if (months > 0) return `${months}mo`;
+  if (days > 0) return `${days}d`;
+  if (hours > 0) return `${hours}h`;
+  if (minutes > 0) return `${minutes}m`;
+  return `${seconds}s`;
+};
+
 export default function TimelinePage() {
   const [currentSlide, setCurrentSlide] = useState(1);
   const [posts, setPosts] = useState<Post[]>([]);
@@ -237,7 +255,7 @@ export default function TimelinePage() {
   return (
     <div className="flex-1 w-full max-w-7xl mx-auto px-4">
       <div className="flex justify-between items-center mb-4">
-        <h1 className="text-3xl font-bold">Daily Feed</h1>
+        <h1 className="text-3xl font-bold">Timeline</h1>
         <span className="text-muted-foreground">
           {currentSlide} of {posts.length}
         </span>
@@ -271,39 +289,54 @@ export default function TimelinePage() {
               </div>
 
               <div className="flex flex-col h-full">
-                <div className="flex justify-between items-start mb-6">
+                <div className="flex items-start mb-8">
                   <div className="flex items-center gap-4">
                     <div className="relative">
                       {post.authorAvatar && (
-                        <Image
-                          src={post.authorAvatar}
-                          alt={`${post.authorName}'s profile`}
-                          width={48}
-                          height={48}
-                          className="rounded-full object-cover"
-                        />
+                        <div className="relative group">
+                          <Image
+                            src={post.authorAvatar}
+                            alt={`${post.authorName}'s profile`}
+                            width={48}
+                            height={48}
+                            className="rounded-full object-cover ring-2 ring-background shadow-md transition-transform duration-200 group-hover:scale-105"
+                          />
+                          <div className="absolute -bottom-2 -right-2 transition-transform duration-200 group-hover:scale-105">
+                            <PlatformIcon platform={post.platform} />
+                          </div>
+                        </div>
                       )}
-                      <div className="absolute -bottom-2 -right-2">
-                        <PlatformIcon platform={post.platform} />
-                      </div>
                     </div>
                     <div className="flex flex-col">
-                      <h2 className="text-xl font-semibold">{post.authorName}</h2>
-                      <span className="text-sm text-muted-foreground">@{post.authorHandle}</span>
+                      <h2 className="text-xl font-semibold hover:text-primary/80 transition-colors cursor-pointer">
+                        {post.authorName}
+                      </h2>
+                      <span className="text-sm text-muted-foreground hover:text-muted-foreground/80 transition-colors cursor-pointer">
+                        @{post.authorHandle}
+                      </span>
+                      <span className="text-sm text-muted-foreground mt-0.5">
+                        {formatTimeAgo(post.createdAt)}
+                      </span>
                     </div>
                   </div>
-                  <span className="text-sm text-muted-foreground">{post.createdAt}</span>
                 </div>
 
                 <div className={`flex-1 flex flex-col ${!post.media ? 'justify-center items-center' : ''}`}>
-                  <div className={`${!post.media ? 'max-w-2xl text-center' : ''}`}>
-                    <div className={`text-lg leading-relaxed ${!expandedPosts.has(post.id) ? 'line-clamp-4' : ''}`}>
+                  <div className={`
+                    ${!post.media ? 'max-w-2xl w-full bg-accent/10 shadow-lg backdrop-blur-sm p-8 rounded-xl border border-accent/20' : ''}
+                    transition-all duration-200 ease-in-out
+                  `}>
+                    <div className={`
+                      text-lg leading-relaxed
+                      ${!expandedPosts.has(post.id) ? 'line-clamp-4' : ''}
+                      ${!post.media ? 'text-center font-medium' : ''}
+                    `}>
                       {post.content}
                     </div>
                     {post.content.split(' ').length > 50 && (
                       <button
                         onClick={() => togglePostExpansion(post.id)}
-                        className="mt-2 text-sm text-primary hover:underline"
+                        className="mt-4 text-sm text-primary hover:text-primary/80 transition-colors font-medium hover:underline"
                       >
                         {expandedPosts.has(post.id) ? 'Show less' : 'Show more'}
                       </button>
@@ -311,13 +344,13 @@ export default function TimelinePage() {
                   </div>
 
                   {post.media && (
-                    <div className="mt-6 relative w-full h-[400px] rounded-xl overflow-hidden bg-background/50">
+                    <div className="mt-6 relative w-full h-[400px] rounded-xl overflow-hidden bg-gradient-to-b from-background/50 to-background/10 shadow-lg border border-accent/10">
                       {post.media.type === 'image' ? (
                         <Image
                           src={post.media.url}
                           alt={post.content}
                           fill
-                          className="object-contain"
+                          className="object-contain transition-transform duration-200 hover:scale-[1.02]"
                           sizes="(max-width: 1280px) 100vw, 1024px"
                         />
                       ) : (
