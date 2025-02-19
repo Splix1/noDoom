@@ -1,4 +1,5 @@
 namespace noDoom.Models;
+using System.Text.Json.Serialization;
 
 public class BlueskyTimelineResponse
 {
@@ -38,24 +39,25 @@ public class Record
 
 public class Embed
 {
-    public Image[]? Images { get; set; }
-    public External? External { get; set; }
+    public BlueskyImage[]? Images { get; set; }
+    public EmbedExternal? External { get; set; }
 }
 
-public class Image
-{
-    public string Ref { get; set; }
-    public string MimeType { get; set; }
-    public int Size { get; set; }
-}
-
-public class External
+public class EmbedExternal
 {
     public string Uri { get; set; }
     public string Title { get; set; }
     public string Description { get; set; }
     public object? Thumb { get; set; }
 }
+
+public class Image
+{
+    public string Alt { get; set; }
+    public AspectRatio AspectRatio { get; set; }
+    public ImageObject ImageObject { get; set; }
+}
+
 
 public class Reply
 {

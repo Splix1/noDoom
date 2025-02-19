@@ -1,5 +1,7 @@
 using noDoom.Models;
 using Microsoft.Extensions.Logging;
+using System.Text.Json;
+using System.Linq;
 
 namespace noDoom.Services;
 public interface IBlueskyService
@@ -35,6 +37,14 @@ public class BlueskyService : IBlueskyService
                     response.StatusCode, error);
                 throw new Exception("Failed to fetch timeline");
             }
+
+            var responseJson = await response.Content.ReadAsStringAsync();
+            _logger.LogInformation("Complete Timeline Response:\n{@TimelineJson}", 
+                JsonSerializer.Serialize(
+                    JsonSerializer.Deserialize<object>(responseJson), 
+                    new JsonSerializerOptions { WriteIndented = true }
+                )
+            );
 
             var blueskyTimeline = await response.Content.ReadFromJsonAsync<BlueskyTimelineResponse>();
             return await EnrichPostsWithMetrics(blueskyTimeline);
@@ -72,37 +82,30 @@ public class BlueskyService : IBlueskyService
                 AuthorAvatar = feed.Post.Author.Avatar ?? "",
                 Content = feed.Post.Record.Text ?? "",
                 CreatedAt = feed.Post.Record.CreatedAt,
-                Media = CreateMediaContent(feed.Post.Record.Embed),
+                Media = CreateMediaContent(feed.Post.Record.Embed, feed.Post.Author.Did),
                 LikeCount = metricsDict.ContainsKey(feed.Post.Uri) ? metricsDict[feed.Post.Uri].LikeCount : 0
             })
             .ToList();
     }
 
-    private MediaContent? CreateMediaContent(Embed? embed)
+    private MediaContent? CreateMediaContent(Embed? embed, string did)
     {
-        if (embed == null) return null;
+        if (embed?.Images == null || embed.Images.Length == 0) return null;
 
-        if (embed.Images?.Length > 0)
+        var image = embed.Images[0];
+        Console.WriteLine(JsonSerializer.Serialize(image, new JsonSerializerOptions { WriteIndented = true }));
+        if (image == null) return null;
+
+        // Extract the format from MimeType (e.g., "jpeg" from "image/jpeg")
+        var format = image.Image.MimeType?.Split('/').LastOrDefault() ?? "jpeg";
+        var imageUrl = $"https://cdn.bsky.app/img/feed_thumbnail/plain/{did}/{image.Image.Ref.Link}@{format}";
+        
+        return new MediaContent
         {
-            return new MediaContent
-            {
-                Type = "image",
-                Url = embed.Images[0].Ref
-            };
-        }
-
-        if (embed.External != null)
-        {
-            return new MediaContent
-            {
-                Type = "link",
-                Url = embed.External.Uri,
-                ThumbnailUrl = embed.External.Thumb?.ToString(),
-                Title = embed.External.Title,
-                Description = embed.External.Description
-            };
-        }
-
-        return null;
+            Type = "image",
+            Url = imageUrl,
+            ThumbnailUrl = imageUrl,
+            Description = image.Alt
+        };
     }
-} 
+}
