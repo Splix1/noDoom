@@ -188,6 +188,7 @@ export default function TimelinePage() {
   const [currentSlide, setCurrentSlide] = useState(1);
   const [posts, setPosts] = useState<Post[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [expandedPosts, setExpandedPosts] = useState<Set<string>>(new Set());
   const supabase = createClient();
   
 
@@ -223,6 +224,16 @@ export default function TimelinePage() {
     fetchTimeline();
   }, []);
   
+  const togglePostExpansion = (postId: string) => {
+    const newExpanded = new Set(expandedPosts);
+    if (newExpanded.has(postId)) {
+      newExpanded.delete(postId);
+    } else {
+      newExpanded.add(postId);
+    }
+    setExpandedPosts(newExpanded);
+  };
+
   return (
     <div className="flex-1 w-full max-w-7xl mx-auto px-4">
       <div className="flex justify-between items-center mb-4">
@@ -284,11 +295,21 @@ export default function TimelinePage() {
               </div>
               
               <div className="flex-1 mb-6">
-                <p className="text-lg leading-relaxed">{post.content}</p>
+                <div className={`text-lg leading-relaxed ${!expandedPosts.has(post.id) ? 'line-clamp-4' : ''}`}>
+                  {post.content}
+                </div>
+                {post.content.split(' ').length > 50 && (
+                  <button
+                    onClick={() => togglePostExpansion(post.id)}
+                    className="mt-2 text-sm text-primary hover:underline"
+                  >
+                    {expandedPosts.has(post.id) ? 'Show less' : 'Show more'}
+                  </button>
+                )}
               </div>
               
               {post.media && (
-                <div className="mb-6 relative w-full h-[400px] rounded-xl overflow-hidden bg-muted">
+                <div className="mb-6 relative w-full h-[400px] rounded-xl overflow-hidden bg-background/50">
                   {post.media.type === 'image' ? (
                     <Image
                       src={post.media.url}
