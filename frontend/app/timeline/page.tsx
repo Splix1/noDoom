@@ -11,6 +11,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
+import { ImageModal } from '@/components/ImageModal';
 
 type Platform = 'reddit' | 'bluesky';
 
@@ -207,6 +208,7 @@ export default function TimelinePage() {
   const [posts, setPosts] = useState<Post[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [expandedPosts, setExpandedPosts] = useState<Set<string>>(new Set());
+  const [selectedImage, setSelectedImage] = useState<{url: string; alt: string} | null>(null);
   const supabase = createClient();
   
 
@@ -344,23 +346,39 @@ export default function TimelinePage() {
                   </div>
 
                   {post.media && (
-                    <div className="mt-6 relative w-full h-[400px] rounded-xl overflow-hidden bg-gradient-to-b from-background/50 to-background/10 shadow-lg border border-accent/10">
-                      {post.media.type === 'image' ? (
-                        <Image
-                          src={post.media.url}
-                          alt={post.content}
-                          fill
-                          className="object-contain transition-transform duration-200 hover:scale-[1.02]"
-                          sizes="(max-width: 1280px) 100vw, 1024px"
-                        />
-                      ) : (
-                        <video
-                          src={post.media.url}
-                          controls
-                          className="w-full h-full object-contain"
+                    <>
+                      <div className="mt-6 relative w-full h-[400px] rounded-xl overflow-hidden bg-gradient-to-b from-background/50 to-background/10 shadow-lg border border-accent/10">
+                        {post.media.type === 'image' ? (
+                          <div 
+                            onClick={() => post.media?.url && setSelectedImage({ url: post.media.url, alt: post.content })}
+                            className="cursor-pointer w-full h-full"
+                          >
+                            <Image
+                              src={post.media.url}
+                              alt={post.content}
+                              fill
+                              className="object-contain transition-transform duration-200 hover:scale-[1.02]"
+                              sizes="(max-width: 1280px) 100vw, 1024px"
+                            />
+                          </div>
+                        ) : (
+                          <video
+                            src={post.media.url}
+                            controls
+                            className="w-full h-full object-contain"
+                          />
+                        )}
+                      </div>
+                      
+                      {selectedImage && (
+                        <ImageModal
+                          isOpen={!!selectedImage}
+                          onClose={() => setSelectedImage(null)}
+                          imageUrl={selectedImage.url}
+                          alt={selectedImage.alt}
                         />
                       )}
-                    </div>
+                    </>
                   )}
                 </div>
               </div>
