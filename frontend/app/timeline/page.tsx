@@ -7,9 +7,11 @@ import { useEffect, useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { FaReddit } from "react-icons/fa";
 import { SiBluesky } from "react-icons/si";
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
+import { ImageModal } from '@/components/ImageModal';
 
 type Platform = 'reddit' | 'bluesky';
 
@@ -183,10 +185,30 @@ const PlatformIcon = ({ platform }: { platform: Platform }) => {
   }
 };
 
+const formatTimeAgo = (dateString: string) => {
+  const date = new Date(dateString);
+  const now = new Date();
+  const seconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+  const months = Math.floor(days / 30);
+  const years = Math.floor(days / 365);
+
+  if (years > 0) return `${years}y`;
+  if (months > 0) return `${months}mo`;
+  if (days > 0) return `${days}d`;
+  if (hours > 0) return `${hours}h`;
+  if (minutes > 0) return `${minutes}m`;
+  return `${seconds}s`;
+};
+
 export default function TimelinePage() {
   const [currentSlide, setCurrentSlide] = useState(1);
   const [posts, setPosts] = useState<Post[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [expandedPosts, setExpandedPosts] = useState<Set<string>>(new Set());
+  const [selectedImage, setSelectedImage] = useState<{url: string; alt: string} | null>(null);
   const supabase = createClient();
   
 
@@ -222,75 +244,142 @@ export default function TimelinePage() {
     fetchTimeline();
   }, []);
   
+  const togglePostExpansion = (postId: string) => {
+    const newExpanded = new Set(expandedPosts);
+    if (newExpanded.has(postId)) {
+      newExpanded.delete(postId);
+    } else {
+      newExpanded.add(postId);
+    }
+    setExpandedPosts(newExpanded);
+  };
+
   return (
-    <div className="flex-1 w-full max-w-5xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold">Daily Feed</h1>
+    <div className="flex-1 w-full max-w-7xl mx-auto px-4">
+      <div className="flex justify-between items-center mb-4">
+        <h1 className="text-3xl font-bold">Timeline</h1>
+        <span className="text-muted-foreground">
+          {currentSlide} of {posts.length}
+        </span>
       </div>
       
       <Swiper
         modules={[Navigation, Pagination, Keyboard]}
-        spaceBetween={30}
+        spaceBetween={40}
         slidesPerView={1}
-        navigation
+        navigation={true}
         keyboard={{
           enabled: true,
           onlyInViewport: true,
         }}
-        pagination={{ clickable: true }}
-        className="w-full h-[600px] [&_.swiper-pagination-bullet]:bg-foreground/50 [&_.swiper-pagination-bullet-active]:bg-foreground"
+        pagination={{ 
+          clickable: true,
+          bulletActiveClass: 'swiper-pagination-bullet-active',
+          bulletClass: 'swiper-pagination-bullet'
+        }}
+        className="w-full h-[calc(100vh-12rem)] relative"
         onSlideChange={(swiper) => setCurrentSlide(swiper.activeIndex + 1)}
       >
         {posts.map((post) => (
           <SwiperSlide key={post.id}>
-            <div className="flex flex-col h-full bg-card rounded-lg border p-6">
-              <div className="flex justify-between items-center mb-4">
-                <div className="flex items-center gap-2">
-                  <PlatformIcon platform={post.platform} />
-                  <h2 className="text-xl font-medium">{post.authorName}</h2>
-                </div>
-                <span className="text-sm text-muted-foreground">{post.createdAt}</span>
+            <div className="flex flex-col h-full bg-card rounded-xl border shadow-sm p-8">
+              <div className="swiper-button-prev absolute top-1/2 -left-16 -translate-y-1/2 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-card border shadow-md cursor-pointer after:hidden">
+                <ChevronLeft className="h-6 w-6" />
               </div>
-              
-              <div className="flex-1">
-                <p className="text-foreground/80">{post.content}</p>
+              <div className="swiper-button-next absolute top-1/2 -right-16 -translate-y-1/2 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-card border shadow-md cursor-pointer after:hidden">
+                <ChevronRight className="h-6 w-6" />
               </div>
-              
-              {post.media && (
-                <div className="mb-4 relative w-full h-[300px] rounded-lg overflow-hidden">
-                  {post.media.type === 'image' ? (
-                    <Image
-                      src={post.media?.url}
-                      alt={post.content}
-                      fill
-                      className="object-contain"
-                      sizes="(max-width: 1280px) 100vw, 1024px"
-                    />
-                  ) : (
-                    <video
-                      src={post.media?.url}
-                      controls
-                      className="w-full h-full object-contain"
-                    />
-                  )}
+
+              <div className="flex flex-col h-full">
+                <div className="flex items-start mb-8">
+                  <div className="flex items-center gap-4">
+                    <div className="relative">
+                      {post.authorAvatar && (
+                        <div className="relative group">
+                          <Image
+                            src={post.authorAvatar}
+                            alt={`${post.authorName}'s profile`}
+                            width={48}
+                            height={48}
+                            className="rounded-full object-cover ring-2 ring-background shadow-md transition-transform duration-200 group-hover:scale-105"
+                          />
+                          <div className="absolute -bottom-2 -right-2 transition-transform duration-200 group-hover:scale-105">
+                            <PlatformIcon platform={post.platform} />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex flex-col">
+                      <h2 className="text-xl font-semibold hover:text-primary/80 transition-colors cursor-pointer">
+                        {post.authorName}
+                      </h2>
+                      <span className="text-sm text-muted-foreground hover:text-muted-foreground/80 transition-colors cursor-pointer">
+                        @{post.authorHandle}
+                      </span>
+                      <span className="text-sm text-muted-foreground mt-0.5">
+                        {formatTimeAgo(post.createdAt)}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              )}
-              
-              
-              <div className="mt-4 flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                  {post.authorAvatar ? (
-                    <Image
-                      src={post.authorAvatar}
-                      alt={`${post.authorName}'s profile`}
-                      width={32}
-                      height={32}
-                      className="rounded-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-8 h-8 rounded-full bg-primary/10" />
+
+                <div className={`flex-1 flex flex-col ${!post.media ? 'justify-center items-center' : ''}`}>
+                  <div className={`
+                    ${!post.media ? 'max-w-2xl w-full bg-accent/10 shadow-lg backdrop-blur-sm p-8 rounded-xl border border-accent/20' : ''}
+                    transition-all duration-200 ease-in-out
+                  `}>
+                    <div className={`
+                      text-lg leading-relaxed
+                      ${!expandedPosts.has(post.id) ? 'line-clamp-4' : ''}
+                      ${!post.media ? 'text-center font-medium' : ''}
+                    `}>
+                      {post.content}
+                    </div>
+                    {post.content.split(' ').length > 50 && (
+                      <button
+                        onClick={() => togglePostExpansion(post.id)}
+                        className="mt-4 text-sm text-primary hover:text-primary/80 transition-colors font-medium hover:underline"
+                      >
+                        {expandedPosts.has(post.id) ? 'Show less' : 'Show more'}
+                      </button>
+                    )}
+                  </div>
+
+                  {post.media && (
+                    <>
+                      <div className="mt-6 relative w-full h-[400px] rounded-xl overflow-hidden bg-gradient-to-b from-background/50 to-background/10 shadow-lg border border-accent/10">
+                        {post.media.type === 'image' ? (
+                          <div 
+                            onClick={() => post.media?.url && setSelectedImage({ url: post.media.url, alt: post.content })}
+                            className="cursor-pointer w-full h-full"
+                          >
+                            <Image
+                              src={post.media.url}
+                              alt={post.content}
+                              fill
+                              className="object-contain transition-transform duration-200 hover:scale-[1.02]"
+                              sizes="(max-width: 1280px) 100vw, 1024px"
+                            />
+                          </div>
+                        ) : (
+                          <video
+                            src={post.media.url}
+                            controls
+                            className="w-full h-full object-contain"
+                          />
+                        )}
+                      </div>
+                      
+                      {selectedImage && (
+                        <ImageModal
+                          isOpen={!!selectedImage}
+                          onClose={() => setSelectedImage(null)}
+                          imageUrl={selectedImage.url}
+                          alt={selectedImage.alt}
+                        />
+                      )}
+                    </>
                   )}
-                  <span className="text-sm font-medium">{post.authorName}</span>
                 </div>
               </div>
             </div>
