@@ -22,6 +22,7 @@ public class RedisService : IRedisService
     private readonly IConnectionMultiplexer _redis;
     private readonly IDatabase _db;
     private static readonly TimeSpan AccessTokenTTL = TimeSpan.FromHours(2);
+    private static readonly TimeSpan TimelinePostsTTL = TimeSpan.FromHours(6);
 
     public RedisService(IConnectionMultiplexer redis)
     {
@@ -84,6 +85,6 @@ public class RedisService : IRedisService
 
     public async Task CacheTimelinePostsAsync(string userId, string timelineType, List<UnifiedPost> posts)
     {
-        await SetAsync($"timeline:{userId}:{timelineType}", posts, TimeSpan.FromMinutes(5));
+        await SetAsync($"timeline:{userId}:{timelineType}", posts, TimelinePostsTTL);
     }
 } 
