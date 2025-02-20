@@ -11,12 +11,15 @@ public interface IRedisService
     Task<string?> GetAccessTokenAsync(string did);
     Task<string?> GetRefreshTokenAsync(string did);
     Task SetTokensAsync(string did, string accessToken, string refreshToken, TimeSpan? expiry = null);
+    Task SetAccessTokenAsync(string did, string accessToken);
+    Task RemoveAccessTokenAsync(string did);
 }
 
 public class RedisService : IRedisService
 {
     private readonly IConnectionMultiplexer _redis;
     private readonly IDatabase _db;
+    private static readonly TimeSpan AccessTokenTTL = TimeSpan.FromHours(2);
 
     public RedisService(IConnectionMultiplexer redis)
     {
@@ -43,7 +46,8 @@ public class RedisService : IRedisService
 
     public async Task<string?> GetAccessTokenAsync(string did)
     {
-        return await GetAsync<string>($"bluesky_access_token:{did}");
+        var value = await _db.StringGetAsync($"bluesky_access_token:{did}");
+        return value.HasValue ? value.ToString() : null;
     }
 
     public async Task<string?> GetRefreshTokenAsync(string did)
@@ -55,5 +59,19 @@ public class RedisService : IRedisService
     {
         await SetAsync($"bluesky_access_token:{did}", accessToken, expiry);
         await SetAsync($"bluesky_refresh_token:{did}", refreshToken, expiry);
+    }
+
+    public async Task SetAccessTokenAsync(string did, string accessToken)
+    {
+        await _db.StringSetAsync(
+            $"bluesky_access_token:{did}",
+            accessToken,
+            AccessTokenTTL
+        );
+    }
+
+    public async Task RemoveAccessTokenAsync(string did)
+    {
+        await _db.KeyDeleteAsync($"bluesky_access_token:{did}");
     }
 } 

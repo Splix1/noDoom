@@ -31,7 +31,6 @@ namespace noDoom.Controllers
         public async Task<IActionResult> Connect([FromBody] BlueskyCredentials credentials)
         {
             try {
-
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 
                 if (string.IsNullOrEmpty(userId))
@@ -39,20 +38,19 @@ namespace noDoom.Controllers
                     return Unauthorized(new { message = "User not authenticated" });
                 }
 
-                var response = await _httpClient.PostAsJsonAsync("https://bsky.social/xrpc/com.atproto.server.createSession", new { identifier = credentials.Username, password = credentials.AppPassword });
+                var response = await _httpClient.PostAsJsonAsync(
+                    "https://bsky.social/xrpc/com.atproto.server.createSession", 
+                    new { identifier = credentials.Username, password = credentials.AppPassword }
+                );
+                
                 var authData = await response.Content.ReadFromJsonAsync<BlueskyAuthResponse>();
                 
-                // Cache tokens in Redis
-                await _redisService.SetTokensAsync(
-                    authData.Did, 
-                    authData.AccessJwt, 
-                    authData.RefreshJwt, 
-                    TimeSpan.FromDays(1)
-                );
+                // Store access token in Redis with 2-hour TTL
+                await _redisService.SetAccessTokenAsync(authData.Did, authData.AccessJwt);
 
+                // Store connection with refresh token in Supabase
                 var newConnection = new Connection {
                     Platform = "bluesky",
-                    AccessToken = authData.AccessJwt,
                     RefreshToken = authData.RefreshJwt,
                     DID = authData.Did,
                     Handle = authData.Handle,
@@ -63,10 +61,7 @@ namespace noDoom.Controllers
                 
                 return Ok(new { message = "Bluesky account connected successfully!"});
             } catch (Exception ex) {
-                Console.WriteLine($"Bluesky connection error: {ex.Message}");
-                if (ex.InnerException != null) {
-                    Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
-                }
+                _logger.LogError(ex, "Failed to connect to Bluesky");
                 return BadRequest(new { message = "Failed to connect to Bluesky." });
             }
         }
