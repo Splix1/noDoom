@@ -51,9 +51,11 @@ export default async function AuthButton() {
   return user ? (
     <div className="flex items-center gap-2">
       <div className="flex-shrink-0">
-        <Button variant={"outline"} size="sm" className="w-[80px]">
-          <Link href="/settings">Settings</Link>
-        </Button>
+        <Link href="/settings">
+          <Button variant={"outline"} size="sm" className="w-[80px]">
+            Settings
+          </Button>
+        </Link>
       </div>
       <form action={signOutAction} className="flex-shrink-0">
         <Button type="submit" variant={"outline"} size="sm" className="w-[80px]">
@@ -64,14 +66,18 @@ export default async function AuthButton() {
   ) : (
     <div className="flex items-center gap-2">
       <div className="flex-shrink-0">
-        <Button asChild size="sm" variant={"outline"} className="w-[80px]">
-          <Link href="/sign-in">Sign in</Link>
-        </Button>
+        <Link href="/sign-in">
+          <Button size="sm" variant={"outline"} className="w-[80px]">
+            Sign in
+          </Button>
+        </Link>
       </div>
       <div className="flex-shrink-0">
-        <Button asChild size="sm" variant={"default"} className="w-[80px]">
-          <Link href="/sign-up">Sign up</Link>
-        </Button>
+        <Link href="/sign-up">
+          <Button size="sm" variant={"default"} className="w-[80px]">
+            Sign up
+          </Button>
+        </Link>
       </div>
     </div>
   );
