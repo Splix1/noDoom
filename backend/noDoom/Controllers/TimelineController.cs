@@ -58,7 +58,7 @@ namespace noDoom.Controllers
                     return BadRequest(ApiResponse<List<UnifiedPost>>.CreateError("No Bluesky connection found"));
                 }
 
-                var posts = await _blueskyService.GetTimelinePostsAsync(connection.AccessToken, connection.DID, connection.RefreshToken);
+                var posts = await _blueskyService.GetTimelinePostsAsync(connection.DID);
                 var sortedPosts = posts.OrderByDescending(p => p.LikeCount).Take(15).ToList();
                 
                 // Cache the posts

@@ -2,11 +2,12 @@ using noDoom.Models;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 using System.Linq;
+using Supabase;
 
 namespace noDoom.Services;
 public interface IBlueskyService
 {
-    Task<List<UnifiedPost>> GetTimelinePostsAsync(string accessToken, string did, string refreshToken);
+    Task<List<UnifiedPost>> GetTimelinePostsAsync(string did);
 }
 
 public class BlueskyService : IBlueskyService
@@ -14,19 +15,67 @@ public class BlueskyService : IBlueskyService
     private readonly HttpClient _httpClient;
     private readonly ILogger<BlueskyService> _logger;
     private readonly IRedisService _redisService;
+    private readonly Client _supabaseClient;
 
-    public BlueskyService(HttpClient httpClient, ILogger<BlueskyService> logger, IRedisService redisService)
+    public BlueskyService(
+        HttpClient httpClient, 
+        ILogger<BlueskyService> logger, 
+        IRedisService redisService,
+        Client supabaseClient)
     {
         _httpClient = httpClient;
         _logger = logger;
         _redisService = redisService;
+        _supabaseClient = supabaseClient;
     }
 
-    public async Task<List<UnifiedPost>> GetTimelinePostsAsync(string accessToken, string did, string refreshToken)
+    private async Task<string> GetValidAccessTokenAsync(string did)
+    {
+        // Try to get access token from Redis
+        var accessToken = await _redisService.GetAccessTokenAsync(did);
+        if (!string.IsNullOrEmpty(accessToken))
+        {
+            return accessToken;
+        }
+
+        // If not in Redis, get refresh token from Supabase
+        var connection = await _supabaseClient
+            .From<Connection>()
+            .Where(x => x.DID == did)
+            .Single();
+
+        if (connection == null)
+        {
+            throw new UnauthorizedAccessException("No connection found");
+        }
+
+        // Use refresh token to get new access token
+        _httpClient.DefaultRequestHeaders.Authorization = 
+            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", connection.RefreshToken);
+        
+        var response = await _httpClient.PostAsync(
+            "https://bsky.social/xrpc/com.atproto.server.refreshSession", 
+            null
+        );
+        
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new UnauthorizedAccessException("Failed to refresh token");
+        }
+
+        var authData = await response.Content.ReadFromJsonAsync<BlueskyAuthResponse>();
+        
+        // Store new access token in Redis
+        await _redisService.SetAccessTokenAsync(did, authData.AccessJwt);
+
+        return authData.AccessJwt;
+    }
+
+    public async Task<List<UnifiedPost>> GetTimelinePostsAsync(string did)
     {
         try
         {
-            var validToken = await RefreshTokenIfNeededAsync(accessToken, did, refreshToken);
+            var validToken = await GetValidAccessTokenAsync(did);
             _httpClient.DefaultRequestHeaders.Clear();
             _httpClient.DefaultRequestHeaders.Authorization = 
                 new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", validToken);
@@ -38,7 +87,18 @@ public class BlueskyService : IBlueskyService
                 var error = await response.Content.ReadAsStringAsync();
                 _logger.LogError("Failed to fetch Bluesky timeline. Status: {StatusCode}, Error: {Error}", 
                     response.StatusCode, error);
-                throw new Exception("Failed to fetch timeline");
+                
+                // If token is invalid, clear it from Redis and retry once
+                if (error.Contains("InvalidToken"))
+                {
+                    _logger.LogInformation("Invalid token detected, clearing cache and retrying");
+                    await _redisService.RemoveAccessTokenAsync(did);
+                    
+                    // Recursive call to retry with new token
+                    return await GetTimelinePostsAsync(did);
+                }
+                
+                throw new Exception($"Failed to fetch timeline: {error}");
             }
 
             var responseJson = await response.Content.ReadAsStringAsync();
@@ -110,45 +170,5 @@ public class BlueskyService : IBlueskyService
             ThumbnailUrl = imageUrl,
             Description = image.Alt
         };
-    }
-
-    private async Task<string> RefreshTokenIfNeededAsync(string accessToken, string did, string refreshToken)
-    {
-        try
-        {
-            // Try the current token first
-            _httpClient.DefaultRequestHeaders.Authorization = 
-                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
-            var testResponse = await _httpClient.GetAsync("https://bsky.social/xrpc/app.bsky.actor.getProfile");
-            
-            if (testResponse.IsSuccessStatusCode)
-            {
-                return accessToken;
-            }
-
-            // If we get here, token needs refresh
-            if (string.IsNullOrEmpty(refreshToken))
-            {
-                throw new UnauthorizedAccessException("No refresh token found");
-            }
-
-            _httpClient.DefaultRequestHeaders.Authorization = 
-                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", refreshToken);
-            
-            var response = await _httpClient.PostAsync("https://bsky.social/xrpc/com.atproto.server.refreshSession", null);
-            
-            if (!response.IsSuccessStatusCode)
-            {
-                throw new UnauthorizedAccessException("Failed to refresh token");
-            }
-
-            var authData = await response.Content.ReadFromJsonAsync<BlueskyAuthResponse>();
-            return authData.AccessJwt;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error refreshing token");
-            throw;
-        }
     }
 }

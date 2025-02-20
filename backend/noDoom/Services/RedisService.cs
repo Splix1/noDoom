@@ -11,14 +11,18 @@ public interface IRedisService
     Task<string?> GetAccessTokenAsync(string did);
     Task<string?> GetRefreshTokenAsync(string did);
     Task SetTokensAsync(string did, string accessToken, string refreshToken, TimeSpan? expiry = null);
-    Task CacheTimelinePostsAsync(string userId, string tab, List<UnifiedPost> posts);
-    Task<List<UnifiedPost>?> GetCachedTimelinePostsAsync(string userId, string tab);
+    Task SetAccessTokenAsync(string did, string accessToken);
+    Task RemoveAccessTokenAsync(string did);
+    Task<List<UnifiedPost>?> GetCachedTimelinePostsAsync(string userId, string timelineType);
+    Task CacheTimelinePostsAsync(string userId, string timelineType, List<UnifiedPost> posts);
 }
 
 public class RedisService : IRedisService
 {
     private readonly IConnectionMultiplexer _redis;
     private readonly IDatabase _db;
+    private static readonly TimeSpan AccessTokenTTL = TimeSpan.FromHours(2);
+    private static readonly TimeSpan TimelinePostsTTL = TimeSpan.FromHours(6);
 
     public RedisService(IConnectionMultiplexer redis)
     {
@@ -45,7 +49,8 @@ public class RedisService : IRedisService
 
     public async Task<string?> GetAccessTokenAsync(string did)
     {
-        return await GetAsync<string>($"bluesky_access_token:{did}");
+        var value = await _db.StringGetAsync($"bluesky_access_token:{did}");
+        return value.HasValue ? value.ToString() : null;
     }
 
     public async Task<string?> GetRefreshTokenAsync(string did)
@@ -59,13 +64,27 @@ public class RedisService : IRedisService
         await SetAsync($"bluesky_refresh_token:{did}", refreshToken, expiry);
     }
 
-    public async Task CacheTimelinePostsAsync(string userId, string tab, List<UnifiedPost> posts)
+    public async Task SetAccessTokenAsync(string did, string accessToken)
     {
-        await SetAsync($"{userId}:{tab}", posts, TimeSpan.FromHours(6));
+        await _db.StringSetAsync(
+            $"bluesky_access_token:{did}",
+            accessToken,
+            AccessTokenTTL
+        );
     }
 
-    public async Task<List<UnifiedPost>?> GetCachedTimelinePostsAsync(string userId, string tab)
+    public async Task RemoveAccessTokenAsync(string did)
     {
-        return await GetAsync<List<UnifiedPost>>($"{userId}:{tab}");
+        await _db.KeyDeleteAsync($"bluesky_access_token:{did}");
+    }
+
+    public async Task<List<UnifiedPost>?> GetCachedTimelinePostsAsync(string userId, string timelineType)
+    {
+        return await GetAsync<List<UnifiedPost>>($"timeline:{userId}:{timelineType}");
+    }
+
+    public async Task CacheTimelinePostsAsync(string userId, string timelineType, List<UnifiedPost> posts)
+    {
+        await SetAsync($"timeline:{userId}:{timelineType}", posts, TimelinePostsTTL);
     }
 } 
