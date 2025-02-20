@@ -87,7 +87,18 @@ public class BlueskyService : IBlueskyService
                 var error = await response.Content.ReadAsStringAsync();
                 _logger.LogError("Failed to fetch Bluesky timeline. Status: {StatusCode}, Error: {Error}", 
                     response.StatusCode, error);
-                throw new Exception("Failed to fetch timeline");
+                
+                // If token is invalid, clear it from Redis and retry once
+                if (error.Contains("InvalidToken"))
+                {
+                    _logger.LogInformation("Invalid token detected, clearing cache and retrying");
+                    await _redisService.RemoveAccessTokenAsync(did);
+                    
+                    // Recursive call to retry with new token
+                    return await GetTimelinePostsAsync(did);
+                }
+                
+                throw new Exception($"Failed to fetch timeline: {error}");
             }
 
             var responseJson = await response.Content.ReadAsStringAsync();

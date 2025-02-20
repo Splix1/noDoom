@@ -14,14 +14,17 @@ namespace noDoom.Controllers
         private readonly IBlueskyService _blueskyService;
         private readonly Client _supabaseClient;
         private readonly ILogger<TimelineController> _logger;
+        private readonly IRedisService _redisService;
 
         public TimelineController(
             IBlueskyService blueskyService, 
             Client supabaseClient,
+            IRedisService redisService,
             ILogger<TimelineController> logger)
         {
             _blueskyService = blueskyService;
             _supabaseClient = supabaseClient;
+            _redisService = redisService;
             _logger = logger;
         }
 
@@ -36,8 +39,15 @@ namespace noDoom.Controllers
                     return Unauthorized(ApiResponse<List<UnifiedPost>>.CreateError("User not authenticated"));
                 }
 
-                 var parsedUserId = Guid.Parse(userId);
+                // Try to get from cache first
+                var cachedPosts = await _redisService.GetCachedTimelinePostsAsync(userId, "timeline");
+                if (cachedPosts != null)
+                {
+                    return Ok(ApiResponse<List<UnifiedPost>>.CreateSuccess(cachedPosts));
+                }
 
+                // If not in cache, fetch from Bluesky
+                var parsedUserId = Guid.Parse(userId);
                 var connection = await _supabaseClient
                     .From<Connection>()
                     .Where(x => x.UserId == parsedUserId && x.Platform == "bluesky")
@@ -50,6 +60,9 @@ namespace noDoom.Controllers
 
                 var posts = await _blueskyService.GetTimelinePostsAsync(connection.DID);
                 var sortedPosts = posts.OrderByDescending(p => p.LikeCount).Take(15).ToList();
+                
+                // Cache the posts
+                await _redisService.CacheTimelinePostsAsync(userId, "timeline", sortedPosts);
                 
                 return Ok(ApiResponse<List<UnifiedPost>>.CreateSuccess(sortedPosts));
             }

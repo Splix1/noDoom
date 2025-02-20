@@ -13,6 +13,8 @@ public interface IRedisService
     Task SetTokensAsync(string did, string accessToken, string refreshToken, TimeSpan? expiry = null);
     Task SetAccessTokenAsync(string did, string accessToken);
     Task RemoveAccessTokenAsync(string did);
+    Task<List<UnifiedPost>?> GetCachedTimelinePostsAsync(string userId, string timelineType);
+    Task CacheTimelinePostsAsync(string userId, string timelineType, List<UnifiedPost> posts);
 }
 
 public class RedisService : IRedisService
@@ -73,5 +75,15 @@ public class RedisService : IRedisService
     public async Task RemoveAccessTokenAsync(string did)
     {
         await _db.KeyDeleteAsync($"bluesky_access_token:{did}");
+    }
+
+    public async Task<List<UnifiedPost>?> GetCachedTimelinePostsAsync(string userId, string timelineType)
+    {
+        return await GetAsync<List<UnifiedPost>>($"timeline:{userId}:{timelineType}");
+    }
+
+    public async Task CacheTimelinePostsAsync(string userId, string timelineType, List<UnifiedPost> posts)
+    {
+        await SetAsync($"timeline:{userId}:{timelineType}", posts, TimeSpan.FromMinutes(5));
     }
 } 
