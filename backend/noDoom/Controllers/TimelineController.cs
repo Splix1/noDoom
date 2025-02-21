@@ -4,6 +4,7 @@ using noDoom.Models;
 using System.Security.Claims;
 using noDoom.Services;
 using Microsoft.Extensions.Logging;
+using noDoom.Services.Bluesky;
 
 namespace noDoom.Controllers
 {
@@ -11,18 +12,18 @@ namespace noDoom.Controllers
     [Route("api/timeline")]
     public class TimelineController : ControllerBase
     {
-        private readonly IBlueskyService _blueskyService;
+        private readonly IBlueskyTimelineService _blueskyTimelineService;
         private readonly Client _supabaseClient;
         private readonly ILogger<TimelineController> _logger;
         private readonly IRedisService _redisService;
 
         public TimelineController(
-            IBlueskyService blueskyService, 
+            IBlueskyTimelineService blueskyTimelineService, 
             Client supabaseClient,
             IRedisService redisService,
             ILogger<TimelineController> logger)
         {
-            _blueskyService = blueskyService;
+            _blueskyTimelineService = blueskyTimelineService;
             _supabaseClient = supabaseClient;
             _redisService = redisService;
             _logger = logger;
@@ -58,7 +59,7 @@ namespace noDoom.Controllers
                     return BadRequest(ApiResponse<List<UnifiedPost>>.CreateError("No Bluesky connection found"));
                 }
 
-                var posts = await _blueskyService.GetTimelinePostsAsync(connection.DID);
+                var posts = await _blueskyTimelineService.GetTimelinePostsAsync(connection.DID);
                 var sortedPosts = posts.OrderByDescending(p => p.LikeCount).Take(15).ToList();
                 
                 // Cache the posts
