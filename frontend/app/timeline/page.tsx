@@ -13,6 +13,8 @@ import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import { ImageModal } from '@/components/ImageModal';
 import { MediaGallery } from '@/components/MediaGallery';
+import { QuotedPost } from '@/components/QuotedPost';
+import { PlatformIcon } from '@/components/PlatformIcon';
 
 type Platform = 'reddit' | 'bluesky';
 
@@ -34,6 +36,7 @@ interface Post {
   createdAt: string;
   media?: MediaContent[];
   likeCount: number;
+  quotedPost?: Post;
 }
 
 const mockPosts: Post[] = [
@@ -182,17 +185,6 @@ const mockPosts: Post[] = [
     likeCount: 0
   }
 ];
-
-const PlatformIcon = ({ platform }: { platform: Platform }) => {
-  switch (platform) {
-    case 'reddit':
-      return <FaReddit className="w-5 h-5 text-[#FF4500]" />;
-    case 'bluesky':
-      return <SiBluesky className="w-5 h-5 text-[#0560FF]" />;
-    default:
-      return null;
-  }
-};
 
 const formatTimeAgo = (dateString: string) => {
   const date = new Date(dateString);
@@ -344,6 +336,9 @@ export default function TimelinePage() {
                       ${!post.media ? 'text-center font-medium' : ''}
                     `}>
                       {post.content}
+                      {post.quotedPost && (
+                        <QuotedPost post={post.quotedPost} />
+                      )}
                     </div>
                     {post.content.split(' ').length > 50 && (
                       <button

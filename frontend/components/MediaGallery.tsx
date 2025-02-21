@@ -15,9 +15,10 @@ interface MediaGalleryProps {
   media: MediaContent[];
   alt: string;
   onModalChange: (isOpen: boolean) => void;
+  isQuoted?: boolean;
 }
 
-export function MediaGallery({ media, alt, onModalChange }: MediaGalleryProps) {
+export function MediaGallery({ media, alt, onModalChange, isQuoted = false }: MediaGalleryProps) {
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
 
   const getGridClassName = (total: number, index: number) => {
@@ -30,7 +31,10 @@ export function MediaGallery({ media, alt, onModalChange }: MediaGalleryProps) {
 
   return (
     <>
-      <div className="mt-6 grid grid-cols-2 grid-rows-2 gap-1 aspect-square max-h-[400px] rounded-xl overflow-hidden">
+      <div className={cn(
+        "mt-6 grid grid-cols-2 grid-rows-2 gap-1 aspect-square rounded-xl overflow-hidden",
+        isQuoted ? "max-h-[200px]" : "max-h-[400px]"
+      )}>
         {media.slice(0, 4).map((item, index) => (
           <div
             key={index}
