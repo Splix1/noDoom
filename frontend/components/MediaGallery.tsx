@@ -32,34 +32,36 @@ export function MediaGallery({ media, alt, onModalChange, isQuoted = false }: Me
   return (
     <>
       <div className={cn(
-        "mt-6 grid grid-cols-2 grid-rows-2 gap-1 aspect-square rounded-xl overflow-hidden",
-        isQuoted ? "max-h-[200px]" : "max-h-[400px]"
+        "grid grid-cols-2 gap-2 w-full rounded-xl overflow-hidden",
+        isQuoted ? "max-h-[150px]" : "h-[500px]"
       )}>
         {media.slice(0, 4).map((item, index) => (
           <div
             key={index}
             className={cn(
               "relative overflow-hidden bg-accent/10",
-              getGridClassName(Math.min(media.length, 4), index)
+              getGridClassName(Math.min(media.length, 4), index),
+              media.length === 2 ? (isQuoted ? "h-[75px]" : "h-full") : "",
+              isQuoted && media.length === 1 ? "h-[150px]" : "",
+              !isQuoted && media.length === 1 && "h-full"
             )}
           >
             {item.type === 'image' ? (
-              <div 
-                onClick={() => setSelectedImageIndex(index)}
-                className="cursor-pointer w-full h-full"
-              >
+              <div className="relative w-full h-full">
                 <Image
                   src={item.url}
                   alt={alt}
                   fill
-                  className="object-contain transition-transform duration-200 hover:scale-105"
+                  className={cn(
+                    "object-contain cursor-pointer",
+                    !isQuoted && "object-cover"
+                  )}
                   sizes="(max-width: 1280px) 100vw, 1024px"
+                  onClick={() => {
+                    setSelectedImageIndex(index);
+                    onModalChange(true);
+                  }}
                 />
-                {media.length > 4 && index === 3 && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/60">
-                    <span className="text-white text-xl font-medium">+{media.length - 4}</span>
-                  </div>
-                )}
               </div>
             ) : (
               <video
@@ -72,7 +74,7 @@ export function MediaGallery({ media, alt, onModalChange, isQuoted = false }: Me
         ))}
       </div>
 
-      {selectedImageIndex !== null && (
+      {!isQuoted && selectedImageIndex !== null && (
         <ImageModal
           isOpen={selectedImageIndex !== null}
           onClose={() => {

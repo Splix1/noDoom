@@ -15,6 +15,7 @@ import { ImageModal } from '@/components/ImageModal';
 import { MediaGallery } from '@/components/MediaGallery';
 import { QuotedPost } from '@/components/QuotedPost';
 import { PlatformIcon } from '@/components/PlatformIcon';
+import { cn } from '@/lib/utils';
 
 type Platform = 'reddit' | 'bluesky';
 
@@ -42,20 +43,31 @@ interface Post {
 const mockPosts: Post[] = [
   {
     id: "1",
-    platform: 'reddit',
-    authorName: "Jane Smith",
-    authorHandle: "janesmith",
-    authorAvatar: "https://cdn.frankerfacez.com/emoticon/462459/4",
-    content: "This is the first post with an image :)",
-    createdAt: "2 hours ago",
-    media: [{
-      type: 'video',
-      url: 'https://video.twimg.com/ext_tw_video/1889645803570077701/pu/vid/avc1/1280x720/jbS3HsDlqKOxXuys.mp4?'
-    }, {
-      type: 'video',
-      url: 'https://video.twimg.com/ext_tw_video/1889645803570077701/pu/vid/avc1/1280x720/jbS3HsDlqKOxXuys.mp4?'
-    }],
-    likeCount: 0
+    platform: "bluesky",
+    authorName: "Test User",
+    authorHandle: "test.bsky.social",
+    authorAvatar: "https://cdn.bsky.app/img/avatar/plain/did:plc:test/test@jpeg",
+    content: "Check out this interesting post!",
+    createdAt: new Date().toISOString(),
+    likeCount: 42,
+    quotedPost: {
+      id: "2",
+      platform: "bluesky",
+      authorName: "Quoted User",
+      authorHandle: "quoted.bsky.social",
+      authorAvatar: "https://cdn.bsky.app/img/avatar/plain/did:plc:quoted/quoted@jpeg",
+      content: "This is the quoted post content with some interesting information.",
+      createdAt: new Date(Date.now() - 86400000).toISOString(),
+      likeCount: 100,
+      media: [
+        {
+          type: "image",
+          url: "https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:test/image@jpeg",
+          thumbnailUrl: "https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:test/image@jpeg",
+          description: "A sample image in the quoted post"
+        }
+      ]
+    }
   },
   {
     id: "2",
@@ -72,7 +84,25 @@ const mockPosts: Post[] = [
       type: 'image',
       url: 'https://cdn.bsky.app/img/feed_fullsize/plain/did:plc:qejaj4rg4bq2bpvknj63f36m/bafkreihfbcgbmeblmnjcyqfd2erv3jxtdw6zicxrwtsgvhx6luipas7lte@jpeg'
     }],
-    likeCount: 0
+    likeCount: 0,
+    quotedPost: {
+      id: "2",
+      platform: "bluesky",
+      authorName: "Quoted User",
+      authorHandle: "quoted.bsky.social",
+      authorAvatar: "https://cdn.frankerfacez.com/emoticon/462459/4",
+      content: "This is the quoted post content with some interesting information.",
+      createdAt: new Date(Date.now() - 86400000).toISOString(),
+      likeCount: 100,
+      media: [
+        {
+          type: "image",
+          url: "https://cdn.frankerfacez.com/emoticon/462459/4",
+          thumbnailUrl: "https://cdn.frankerfacez.com/emoticon/462459/4",
+          description: "A sample image in the quoted post"
+        }
+      ]
+    }
   },
   {
     id: "3",
@@ -82,7 +112,25 @@ const mockPosts: Post[] = [
     authorAvatar: "https://cdn.frankerfacez.com/emoticon/462459/4",
     content: "This is the second post :(",
     createdAt: "4 hours ago",
-    likeCount: 0
+    likeCount: 0,
+    quotedPost: {
+      id: "2",
+      platform: "bluesky",
+      authorName: "Quoted User",
+      authorHandle: "quoted.bsky.social",
+      authorAvatar: "https://cdn.bsky.app/img/avatar/plain/did:plc:quoted/quoted@jpeg",
+      content: "This is the quoted post content with some interesting information.",
+      createdAt: new Date(Date.now() - 86400000).toISOString(),
+      likeCount: 100,
+      media: [
+        {
+          type: "image",
+          url: "https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:test/image@jpeg",
+          thumbnailUrl: "https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:test/image@jpeg",
+          description: "A sample image in the quoted post"
+        }
+      ]
+    }
   },
   {
     id: "4",
@@ -206,6 +254,7 @@ const formatTimeAgo = (dateString: string) => {
 
 export default function TimelinePage() {
   const [currentSlide, setCurrentSlide] = useState(1);
+  const [swiper, setSwiper] = useState<any>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [expandedPosts, setExpandedPosts] = useState<Set<string>>(new Set());
@@ -230,7 +279,8 @@ export default function TimelinePage() {
         const result = await response.json();
         console.log(result);
         if (result.success) {
-          setPosts(result.data);
+          // setPosts(result.data);
+          setPosts(mockPosts);
         } else {
           setError(result.error);
           if (result.error.includes("Please reconnect your account")) {
@@ -257,14 +307,7 @@ export default function TimelinePage() {
   };
 
   return (
-    <div className="flex-1 w-full max-w-7xl mx-auto px-4">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-3xl font-bold">Timeline</h1>
-        <span className="text-muted-foreground">
-          {currentSlide} of {posts.length}
-        </span>
-      </div>
-      
+    <div className="container py-4">
       <Swiper
         modules={[Navigation, Pagination, Keyboard]}
         spaceBetween={40}
@@ -274,58 +317,45 @@ export default function TimelinePage() {
           enabled: true,
           onlyInViewport: true,
         }}
-        pagination={{ 
-          clickable: true,
-          bulletActiveClass: 'swiper-pagination-bullet-active',
-          bulletClass: 'swiper-pagination-bullet'
-        }}
-        className="w-full h-[calc(100vh-12rem)] relative"
+        onSwiper={setSwiper}
+        className="w-full relative"
         onSlideChange={(swiper) => setCurrentSlide(swiper.activeIndex + 1)}
       >
         {posts.map((post) => (
           <SwiperSlide key={post.id}>
-            <div className="flex flex-col h-full bg-card rounded-xl border shadow-sm p-8">
-              <div className="swiper-button-prev absolute top-1/2 -left-16 -translate-y-1/2 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-card border shadow-md cursor-pointer after:hidden">
-                <ChevronLeft className="h-6 w-6" />
-              </div>
-              <div className="swiper-button-next absolute top-1/2 -right-16 -translate-y-1/2 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-card border shadow-md cursor-pointer after:hidden">
-                <ChevronRight className="h-6 w-6" />
-              </div>
-
-              <div className="flex flex-col h-full">
-                <div className="flex items-start mb-8">
-                  <div className="flex items-center gap-4">
-                    <div className="relative">
-                      {post.authorAvatar && (
-                        <div className="relative group">
-                          <Image
-                            src={post.authorAvatar}
-                            alt={`${post.authorName}'s profile`}
-                            width={48}
-                            height={48}
-                            className="rounded-full object-cover ring-2 ring-background shadow-md transition-transform duration-200 group-hover:scale-105"
-                          />
-                          <div className="absolute -bottom-2 -right-2 transition-transform duration-200 group-hover:scale-105">
-                            <PlatformIcon platform={post.platform} />
-                          </div>
-                        </div>
-                      )}
+            <div className="flex flex-col bg-card rounded-xl border shadow-sm">
+              <div className="p-8">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-2">
+                    <Image
+                      src={post.authorAvatar}
+                      alt={post.authorName}
+                      width={48}
+                      height={48}
+                      className="rounded-full"
+                    />
+                    <div>
+                      <div className="font-medium">{post.authorName}</div>
+                      <div className="text-sm text-muted-foreground">@{post.authorHandle}</div>
                     </div>
-                    <div className="flex flex-col">
-                      <h2 className="text-xl font-semibold hover:text-primary/80 transition-colors cursor-pointer">
-                        {post.authorName}
-                      </h2>
-                      <span className="text-sm text-muted-foreground hover:text-muted-foreground/80 transition-colors cursor-pointer">
-                        @{post.authorHandle}
-                      </span>
-                      <span className="text-sm text-muted-foreground mt-0.5">
-                        {formatTimeAgo(post.createdAt)}
-                      </span>
-                    </div>
+                  </div>
+                  <div className="flex gap-1">
+                    {posts.map((_, index) => (
+                      <button
+                        key={index}
+                        onClick={() => swiper?.slideTo(index)}
+                        className={cn(
+                          "w-2 h-2 rounded-full transition-colors",
+                          currentSlide - 1 === index 
+                            ? "bg-primary" 
+                            : "bg-muted-foreground/50"
+                        )}
+                      />
+                    ))}
                   </div>
                 </div>
 
-                <div className={`flex-1 flex flex-col ${!post.media ? 'justify-center items-center' : ''}`}>
+                <div className="flex-1 flex flex-col space-y-4">
                   <div className={`
                     ${!post.media ? 'max-w-2xl w-full bg-accent/10 shadow-lg backdrop-blur-sm p-8 rounded-xl border border-accent/20' : ''}
                     transition-all duration-200 ease-in-out
@@ -336,14 +366,11 @@ export default function TimelinePage() {
                       ${!post.media ? 'text-center font-medium' : ''}
                     `}>
                       {post.content}
-                      {post.quotedPost && (
-                        <QuotedPost post={post.quotedPost} />
-                      )}
                     </div>
                     {post.content.split(' ').length > 50 && (
                       <button
                         onClick={() => togglePostExpansion(post.id)}
-                        className="mt-4 text-sm text-primary hover:text-primary/80 transition-colors font-medium hover:underline"
+                        className="mt-2 text-sm text-primary hover:text-primary/80 transition-colors font-medium hover:underline"
                       >
                         {expandedPosts.has(post.id) ? 'Show less' : 'Show more'}
                       </button>
@@ -351,11 +378,19 @@ export default function TimelinePage() {
                   </div>
 
                   {post.media && post.media.length > 0 && (
-                    <MediaGallery 
-                      media={post.media} 
-                      alt={post.content} 
-                      onModalChange={setIsModalOpen} 
-                    />
+                    <div className="flex justify-center">
+                      <div className="w-full max-w-3xl">
+                        <MediaGallery 
+                          media={post.media} 
+                          alt={post.content} 
+                          onModalChange={setIsModalOpen} 
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {post.quotedPost && (
+                    <QuotedPost post={post.quotedPost} />
                   )}
                 </div>
               </div>
