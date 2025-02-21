@@ -148,7 +148,8 @@ public class BlueskyService : IBlueskyService
                 Content = feed.Post.Record.Text ?? "",
                 CreatedAt = feed.Post.Record.CreatedAt,
                 Media = CreateMediaContent(feed.Post.Record.Embed, feed.Post.Author.Did),
-                LikeCount = metricsDict.ContainsKey(feed.Post.Uri) ? metricsDict[feed.Post.Uri].LikeCount : 0
+                LikeCount = metricsDict.ContainsKey(feed.Post.Uri) ? metricsDict[feed.Post.Uri].LikeCount : 0,
+                QuotedPost = CreateQuotedPost(feed.Post.Record)
             })
             .ToList();
     }
@@ -169,5 +170,22 @@ public class BlueskyService : IBlueskyService
                 Description = image.Alt
             };
         }).ToList();
+    }
+
+    private UnifiedPost? CreateQuotedPost(Record record)
+    {
+        if (record?.Embed?.Record == null) return null;
+
+        return new UnifiedPost
+        {
+            Id = record.Embed.Record.Uri,
+            Platform = "bluesky",
+            AuthorName = record.Embed.Record.Author?.DisplayName ?? "",
+            AuthorHandle = record.Embed.Record.Author?.Handle ?? "",
+            AuthorAvatar = record.Embed.Record.Author?.Avatar,
+            Content = record.Embed.Record.Value?.Text ?? "",
+            CreatedAt = record.Embed.Record.Value?.CreatedAt ?? DateTime.UtcNow,
+            Media = CreateMediaContent(record.Embed.Record.Value?.Embed, record.Embed.Record.Author?.Did)
+        };
     }
 }
