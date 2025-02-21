@@ -31,6 +31,7 @@ public class BlueskyService : IBlueskyService
 
     private async Task<string> GetValidAccessTokenAsync(string did)
     {
+        
         // Try to get access token from Redis
         var accessToken = await _redisService.GetAccessTokenAsync(did);
         if (!string.IsNullOrEmpty(accessToken))
@@ -60,6 +61,7 @@ public class BlueskyService : IBlueskyService
         
         if (!response.IsSuccessStatusCode)
         {
+            Console.WriteLine(await response.Content.ReadAsStringAsync());
             throw new UnauthorizedAccessException("Failed to refresh token");
         }
 
@@ -151,24 +153,21 @@ public class BlueskyService : IBlueskyService
             .ToList();
     }
 
-    private MediaContent? CreateMediaContent(Embed? embed, string did)
+    private List<MediaContent>? CreateMediaContent(Embed? embed, string did)
     {
         if (embed?.Images == null || embed.Images.Length == 0) return null;
 
-        var image = embed.Images[0];
-        Console.WriteLine(JsonSerializer.Serialize(image, new JsonSerializerOptions { WriteIndented = true }));
-        if (image == null) return null;
-
-        // Extract the format from MimeType (e.g., "jpeg" from "image/jpeg")
-        var format = image.Image.MimeType?.Split('/').LastOrDefault() ?? "jpeg";
-        var imageUrl = $"https://cdn.bsky.app/img/feed_thumbnail/plain/{did}/{image.Image.Ref.Link}@{format}";
-        
-        return new MediaContent
-        {
-            Type = "image",
-            Url = imageUrl,
-            ThumbnailUrl = imageUrl,
-            Description = image.Alt
-        };
+        return embed.Images.Select(image => {
+            var format = image.Image.MimeType?.Split('/').LastOrDefault() ?? "jpeg";
+            var imageUrl = $"https://cdn.bsky.app/img/feed_thumbnail/plain/{did}/{image.Image.Ref.Link}@{format}";
+            
+            return new MediaContent
+            {
+                Type = "image",
+                Url = imageUrl,
+                ThumbnailUrl = imageUrl,
+                Description = image.Alt
+            };
+        }).ToList();
     }
 }

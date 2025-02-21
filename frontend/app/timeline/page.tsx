@@ -12,8 +12,17 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import { ImageModal } from '@/components/ImageModal';
+import { MediaGallery } from '@/components/MediaGallery';
 
 type Platform = 'reddit' | 'bluesky';
+
+interface MediaContent {
+  type: 'image' | 'link' | 'video';
+  url: string;
+  thumbnailUrl?: string;
+  title?: string;
+  description?: string;
+}
 
 interface Post {
   id: string;
@@ -23,13 +32,7 @@ interface Post {
   authorAvatar: string;
   content: string;
   createdAt: string;
-  media?: {
-    type: 'image' | 'link' | 'video';
-    url: string;
-    thumbnailUrl?: string;
-    title?: string;
-    description?: string;
-  };
+  media?: MediaContent[];
   likeCount: number;
 }
 
@@ -42,10 +45,13 @@ const mockPosts: Post[] = [
     authorAvatar: "https://cdn.frankerfacez.com/emoticon/462459/4",
     content: "This is the first post with an image :)",
     createdAt: "2 hours ago",
-    media: {
-      type: 'image',
-      url: 'https://cdn.frankerfacez.com/emoticon/462459/4'
-    },
+    media: [{
+      type: 'video',
+      url: 'https://video.twimg.com/ext_tw_video/1889645803570077701/pu/vid/avc1/1280x720/jbS3HsDlqKOxXuys.mp4?'
+    }, {
+      type: 'video',
+      url: 'https://video.twimg.com/ext_tw_video/1889645803570077701/pu/vid/avc1/1280x720/jbS3HsDlqKOxXuys.mp4?'
+    }],
     likeCount: 0
   },
   {
@@ -56,10 +62,13 @@ const mockPosts: Post[] = [
     authorAvatar: "https://cdn.frankerfacez.com/emoticon/462459/4",
     content: "This is the second post with a video :(",
     createdAt: "4 hours ago",
-    media: {
-      type: 'video',
-      url: 'https://video.twimg.com/ext_tw_video/1889645803570077701/pu/vid/avc1/1280x720/jbS3HsDlqKOxXuys.mp4?'
-    },
+    media: [{
+      type: 'image',
+      url: 'https://cdn.bsky.app/img/feed_fullsize/plain/did:plc:m453r6fotgsoegzxtxj7snwa/bafkreidyrst7tgmgwpydqko6v2q2iy5ixoz4uwumr7glxevwageokau5ja@jpeg'
+    }, {
+      type: 'image',
+      url: 'https://cdn.bsky.app/img/feed_fullsize/plain/did:plc:qejaj4rg4bq2bpvknj63f36m/bafkreihfbcgbmeblmnjcyqfd2erv3jxtdw6zicxrwtsgvhx6luipas7lte@jpeg'
+    }],
     likeCount: 0
   },
   {
@@ -209,6 +218,7 @@ export default function TimelinePage() {
   const [error, setError] = useState<string | null>(null);
   const [expandedPosts, setExpandedPosts] = useState<Set<string>>(new Set());
   const [selectedImage, setSelectedImage] = useState<{url: string; alt: string} | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const supabase = createClient();
   
 
@@ -345,40 +355,12 @@ export default function TimelinePage() {
                     )}
                   </div>
 
-                  {post.media && (
-                    <>
-                      <div className="mt-6 relative w-full h-[400px] rounded-xl overflow-hidden bg-gradient-to-b from-background/50 to-background/10 shadow-lg border border-accent/10">
-                        {post.media.type === 'image' ? (
-                          <div 
-                            onClick={() => post.media?.url && setSelectedImage({ url: post.media.url, alt: post.content })}
-                            className="cursor-pointer w-full h-full"
-                          >
-                            <Image
-                              src={post.media.url}
-                              alt={post.content}
-                              fill
-                              className="object-contain transition-transform duration-200 hover:scale-[1.02]"
-                              sizes="(max-width: 1280px) 100vw, 1024px"
-                            />
-                          </div>
-                        ) : (
-                          <video
-                            src={post.media.url}
-                            controls
-                            className="w-full h-full object-contain"
-                          />
-                        )}
-                      </div>
-                      
-                      {selectedImage && (
-                        <ImageModal
-                          isOpen={!!selectedImage}
-                          onClose={() => setSelectedImage(null)}
-                          imageUrl={selectedImage.url}
-                          alt={selectedImage.alt}
-                        />
-                      )}
-                    </>
+                  {post.media && post.media.length > 0 && (
+                    <MediaGallery 
+                      media={post.media} 
+                      alt={post.content} 
+                      onModalChange={setIsModalOpen} 
+                    />
                   )}
                 </div>
               </div>
