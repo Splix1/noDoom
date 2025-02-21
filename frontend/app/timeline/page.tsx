@@ -397,10 +397,16 @@ export default function TimelinePage() {
                   )}
                 </div>
               </div>
-              <button className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-16 z-10 p-2 rounded-full bg-foreground/20 backdrop-blur-sm text-white">
+              <button 
+                onClick={() => swiper?.slidePrev()}
+                className="absolute left-0 top-8 -translate-x-16 z-10 p-2 rounded-full bg-foreground/20 backdrop-blur-sm text-white"
+              >
                 <ChevronLeft className="h-5 w-5" />
               </button>
-              <button className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-16 z-10 p-2 rounded-full bg-foreground/20 backdrop-blur-sm text-white">
+              <button 
+                onClick={() => swiper?.slideNext()}
+                className="absolute right-0 top-8 translate-x-16 z-10 p-2 rounded-full bg-foreground/20 backdrop-blur-sm text-white"
+              >
                 <ChevronRight className="h-5 w-5" />
               </button>
             </div>
