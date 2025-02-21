@@ -238,8 +238,7 @@ export default function TimelinePage() {
         const result = await response.json();
         console.log(result);
         if (result.success) {
-          // setPosts(result.data);
-          setPosts(mockPosts);
+          setPosts(result.data);
         } else {
           setError(result.error);
           if (result.error.includes("Please reconnect your account")) {
@@ -280,7 +279,7 @@ export default function TimelinePage() {
         slidesPerView={1}
         navigation={true}
         keyboard={{
-          enabled: !isModalOpen,
+          enabled: true,
           onlyInViewport: true,
         }}
         pagination={{ 
@@ -360,7 +359,7 @@ export default function TimelinePage() {
                     <MediaGallery 
                       media={post.media} 
                       alt={post.content} 
-                      onModalChange={setIsModalOpen}
+                      onModalChange={setIsModalOpen} 
                     />
                   )}
                 </div>

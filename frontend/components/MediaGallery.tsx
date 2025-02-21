@@ -48,7 +48,7 @@ export function MediaGallery({ media, alt, onModalChange }: MediaGalleryProps) {
                   src={item.url}
                   alt={alt}
                   fill
-                  className="object-cover transition-transform duration-200 hover:scale-105"
+                  className="object-contain transition-transform duration-200 hover:scale-105"
                   sizes="(max-width: 1280px) 100vw, 1024px"
                 />
                 {media.length > 4 && index === 3 && (
