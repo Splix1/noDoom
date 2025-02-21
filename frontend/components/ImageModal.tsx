@@ -2,6 +2,7 @@ import { Dialog, DialogPortal, DialogOverlay } from '@/components/ui/dialog';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import Image from 'next/image';
+import { useEffect } from 'react';
 
 interface ImageModalProps {
   isOpen: boolean;
@@ -26,6 +27,29 @@ export function ImageModal({
 }: ImageModalProps) {
   const fullSizeUrl = imageUrl.replace('feed_thumbnail', 'feed_fullsize');
   const showNavigation = totalImages && totalImages > 1;
+
+  // Add keyboard event handler
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!isOpen) return;
+      
+      if ((e.key === 'ArrowRight' || e.key === 'ArrowLeft' || e.key === 'Escape')) {
+        e.stopPropagation();
+        e.preventDefault();
+        
+        if (e.key === 'ArrowRight' && onNext) {
+          onNext();
+        } else if (e.key === 'ArrowLeft' && onPrevious) {
+          onPrevious();
+        } else if (e.key === 'Escape') {
+          onClose();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown, true);
+    return () => window.removeEventListener('keydown', handleKeyDown, true);
+  }, [isOpen, onNext, onPrevious, onClose]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

@@ -14,9 +14,10 @@ interface MediaContent {
 interface MediaGalleryProps {
   media: MediaContent[];
   alt: string;
+  onModalChange: (isOpen: boolean) => void;
 }
 
-export function MediaGallery({ media, alt }: MediaGalleryProps) {
+export function MediaGallery({ media, alt, onModalChange }: MediaGalleryProps) {
   const [selectedImageIndex, setSelectedImageIndex] = useState<number | null>(null);
 
   const getGridClassName = (total: number, index: number) => {
@@ -70,7 +71,10 @@ export function MediaGallery({ media, alt }: MediaGalleryProps) {
       {selectedImageIndex !== null && (
         <ImageModal
           isOpen={selectedImageIndex !== null}
-          onClose={() => setSelectedImageIndex(null)}
+          onClose={() => {
+            setSelectedImageIndex(null);
+            onModalChange(false);
+          }}
           imageUrl={media[selectedImageIndex].url}
           alt={alt}
           onNext={() => setSelectedImageIndex((prev) => (prev === media.length - 1 ? 0 : prev! + 1))}

@@ -218,6 +218,7 @@ export default function TimelinePage() {
   const [error, setError] = useState<string | null>(null);
   const [expandedPosts, setExpandedPosts] = useState<Set<string>>(new Set());
   const [selectedImage, setSelectedImage] = useState<{url: string; alt: string} | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const supabase = createClient();
   
 
@@ -279,7 +280,7 @@ export default function TimelinePage() {
         slidesPerView={1}
         navigation={true}
         keyboard={{
-          enabled: true,
+          enabled: !isModalOpen,
           onlyInViewport: true,
         }}
         pagination={{ 
@@ -356,7 +357,11 @@ export default function TimelinePage() {
                   </div>
 
                   {post.media && post.media.length > 0 && (
-                    <MediaGallery media={post.media} alt={post.content} />
+                    <MediaGallery 
+                      media={post.media} 
+                      alt={post.content} 
+                      onModalChange={setIsModalOpen}
+                    />
                   )}
                 </div>
               </div>
