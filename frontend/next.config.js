@@ -13,7 +13,6 @@ const nextConfig = {
         pathname: '/emoticon/**',
       }
     ],
-    domains: ['cdn.bsky.app'],
   },
 } 
 

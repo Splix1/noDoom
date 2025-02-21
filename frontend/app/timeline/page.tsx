@@ -118,15 +118,15 @@ const mockPosts: Post[] = [
       platform: "bluesky",
       authorName: "Quoted User",
       authorHandle: "quoted.bsky.social",
-      authorAvatar: "https://cdn.bsky.app/img/avatar/plain/did:plc:quoted/quoted@jpeg",
+      authorAvatar: "https://cdn.frankerfacez.com/emoticon/462459/4",
       content: "This is the quoted post content with some interesting information.",
       createdAt: new Date(Date.now() - 86400000).toISOString(),
       likeCount: 100,
       media: [
         {
           type: "image",
-          url: "https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:test/image@jpeg",
-          thumbnailUrl: "https://cdn.bsky.app/img/feed_thumbnail/plain/did:plc:test/image@jpeg",
+          url: "https://cdn.frankerfacez.com/emoticon/462459/4",
+          thumbnailUrl: "https://cdn.frankerfacez.com/emoticon/462459/4",
           description: "A sample image in the quoted post"
         }
       ]
@@ -312,18 +312,21 @@ export default function TimelinePage() {
         modules={[Navigation, Pagination, Keyboard]}
         spaceBetween={40}
         slidesPerView={1}
-        navigation={true}
+        navigation={{
+          nextEl: '.swiper-button-next',
+          prevEl: '.swiper-button-prev',
+        }}
         keyboard={{
           enabled: true,
           onlyInViewport: true,
         }}
         onSwiper={setSwiper}
-        className="w-full relative"
+        className="w-full relative [&_.swiper-button-next]:!hidden [&_.swiper-button-prev]:!hidden"
         onSlideChange={(swiper) => setCurrentSlide(swiper.activeIndex + 1)}
       >
         {posts.map((post) => (
-          <SwiperSlide key={post.id}>
-            <div className="flex flex-col bg-card rounded-xl border shadow-sm">
+          <SwiperSlide key={post.id} className="flex items-center justify-center py-20">
+            <div className="relative flex flex-col bg-card rounded-xl border shadow-sm w-full max-w-3xl mx-auto">
               <div className="p-8">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-2">
@@ -394,6 +397,12 @@ export default function TimelinePage() {
                   )}
                 </div>
               </div>
+              <button className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-16 z-10 p-2 rounded-full bg-foreground/20 backdrop-blur-sm text-white">
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <button className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-16 z-10 p-2 rounded-full bg-foreground/20 backdrop-blur-sm text-white">
+                <ChevronRight className="h-5 w-5" />
+              </button>
             </div>
           </SwiperSlide>
         ))}
