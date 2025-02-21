@@ -15,8 +15,6 @@ public class Connection : BaseModel
     [Column("platform")]
     public string Platform { get; set; }
 
-    [Column("access_token")]
-    public string AccessToken { get; set; }
 
     [Column("refresh_token")]
     public string RefreshToken { get; set; }
