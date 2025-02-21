@@ -41,6 +41,7 @@ public class Embed
 {
     public BlueskyImage[]? Images { get; set; }
     public EmbedExternal? External { get; set; }
+    public EmbeddedRecord? Record { get; set; }
 }
 
 public class EmbedExternal
@@ -69,4 +70,18 @@ public class ReplyReference
 {
     public string Uri { get; set; }
     public string Cid { get; set; }
+}
+
+public class EmbeddedRecord
+{
+    public string Uri { get; set; }
+    public Author? Author { get; set; }
+    public RecordValue? Value { get; set; }
+}
+
+public class RecordValue
+{
+    public string? Text { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public Embed? Embed { get; set; }
 }

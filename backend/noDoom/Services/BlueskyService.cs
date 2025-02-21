@@ -83,7 +83,7 @@ public class BlueskyService : IBlueskyService
                 new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", validToken);
 
             _logger.LogInformation("Fetching Bluesky timeline");
-            var response = await _httpClient.GetAsync("https://bsky.social/xrpc/app.bsky.feed.getTimeline?limit=15");
+            var response = await _httpClient.GetAsync("https://bsky.social/xrpc/app.bsky.feed.getTimeline?limit=100");
             if (!response.IsSuccessStatusCode)
             {
                 var error = await response.Content.ReadAsStringAsync();
@@ -123,22 +123,32 @@ public class BlueskyService : IBlueskyService
 
     private async Task<List<UnifiedPost>> EnrichPostsWithMetrics(BlueskyTimelineResponse timeline)
     {
-        var postUris = timeline.Feed.Select(f => f.Post.Uri).ToList();
-        var urisParam = string.Join("&", postUris.Select(uri => $"uris={Uri.EscapeDataString(uri)}"));
-        
-        var metricsResponse = await _httpClient.GetAsync(
-            $"https://bsky.social/xrpc/app.bsky.feed.getPosts?{urisParam}"
-        );
+        const int batchSize = 25;
+        var nonReplyPosts = timeline.Feed.Where(f => f.Reply == null).ToList();
+        var metricsDict = new Dictionary<string, PostWithMetrics>();
 
-        if (!metricsResponse.IsSuccessStatusCode) throw new Exception("Failed to fetch metrics");
+        // Process posts in batches
+        for (int i = 0; i < nonReplyPosts.Count; i += batchSize)
+        {
+            var batch = nonReplyPosts.Skip(i).Take(batchSize);
+            var batchUris = batch.Select(f => f.Post.Uri).ToList();
+            var urisParam = string.Join("&", batchUris.Select(uri => $"uris={Uri.EscapeDataString(uri)}"));
+            
+            var metricsResponse = await _httpClient.GetAsync(
+                $"https://bsky.social/xrpc/app.bsky.feed.getPosts?{urisParam}"
+            );
 
-        var postsWithMetrics = await metricsResponse.Content.ReadFromJsonAsync<PostsResponse>();
-        var metricsDict = postsWithMetrics.Posts
-            .Where(p => p != null && p.Uri != null)
-            .ToDictionary(p => p.Uri, p => p);
+            if (!metricsResponse.IsSuccessStatusCode) continue; // Skip failed batch instead of failing entirely
 
-        return timeline.Feed
-            .Select(feed => new UnifiedPost
+            var batchMetrics = await metricsResponse.Content.ReadFromJsonAsync<PostsResponse>();
+            foreach (var post in batchMetrics.Posts.Where(p => p != null && p.PostUri != null))
+            {
+                metricsDict[post.PostUri] = post;
+            }
+        }
+
+        var tasks = nonReplyPosts
+            .Select(async feed => new UnifiedPost
             {
                 Id = feed.Post.Uri,
                 Platform = "bluesky",
@@ -148,9 +158,11 @@ public class BlueskyService : IBlueskyService
                 Content = feed.Post.Record.Text ?? "",
                 CreatedAt = feed.Post.Record.CreatedAt,
                 Media = CreateMediaContent(feed.Post.Record.Embed, feed.Post.Author.Did),
-                LikeCount = metricsDict.ContainsKey(feed.Post.Uri) ? metricsDict[feed.Post.Uri].LikeCount : 0
-            })
-            .ToList();
+                LikeCount = metricsDict.ContainsKey(feed.Post.Uri) ? metricsDict[feed.Post.Uri].Metrics.LikeCount : 0,
+                QuotedPost = await CreateQuotedPost(feed.Post.Record)
+            });
+
+        return (await Task.WhenAll(tasks)).ToList();
     }
 
     private List<MediaContent>? CreateMediaContent(Embed? embed, string did)
@@ -169,5 +181,47 @@ public class BlueskyService : IBlueskyService
                 Description = image.Alt
             };
         }).ToList();
+    }
+
+    private async Task<UnifiedPost?> CreateQuotedPost(Record? record)
+    {
+        if (record?.Embed?.Record == null) return null;
+
+        try 
+        {
+            var uri = record.Embed.Record.Uri;
+            if (string.IsNullOrEmpty(uri)) return null;
+
+            _logger.LogInformation("Fetching quoted post data for URI: {Uri}", uri);
+            
+            var response = await _httpClient.GetAsync(
+                $"https://bsky.social/xrpc/app.bsky.feed.getPosts?uris={Uri.EscapeDataString(uri)}"
+            );
+
+            if (!response.IsSuccessStatusCode) return null;
+
+            var postData = await response.Content.ReadFromJsonAsync<PostsResponse>();
+            var quotedPost = postData?.Posts?.FirstOrDefault();
+            
+            if (quotedPost?.PostAuthor == null || quotedPost?.PostRecord == null) return null;
+
+            return new UnifiedPost
+            {
+                Id = quotedPost.PostUri,
+                Platform = "bluesky",
+                AuthorName = quotedPost.PostAuthor.DisplayName ?? "",
+                AuthorHandle = quotedPost.PostAuthor.Handle ?? "",
+                AuthorAvatar = quotedPost.PostAuthor.Avatar,
+                Content = quotedPost.PostRecord.Text ?? "",
+                CreatedAt = quotedPost.PostRecord.CreatedAt,
+                Media = CreateMediaContent(quotedPost.PostRecord.Embed, quotedPost.PostAuthor.Did),
+                LikeCount = quotedPost.Metrics?.LikeCount ?? 0
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating quoted post");
+            return null;
+        }
     }
 }
