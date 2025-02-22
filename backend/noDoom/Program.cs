@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using StackExchange.Redis;
 using noDoom.Services;
+using noDoom.Services.Bluesky;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -40,10 +41,9 @@ await supabaseClient.InitializeAsync();
 
 builder.Services.AddSingleton(supabaseClient);
 
-builder.Services.AddHttpClient<IBlueskyService, BlueskyService>(client =>
-{
-    client.BaseAddress = new Uri("https://cdn.bsky.app/");
-});
+builder.Services.AddHttpClient<IBlueskyAuthService, BlueskyAuthService>();
+builder.Services.AddHttpClient<IBlueskyTimelineService, BlueskyTimelineService>();
+builder.Services.AddScoped<IBlueskyPostEnricher, BlueskyPostEnricher>();
 
 // Add Redis configuration
 var redisConnection = ConnectionMultiplexer.Connect(builder.Configuration["Redis:ConnectionString"]);

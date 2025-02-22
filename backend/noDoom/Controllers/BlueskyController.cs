@@ -4,24 +4,25 @@ using noDoom.Models;
 using System.Security.Claims;
 using Microsoft.Extensions.Logging;
 using noDoom.Services;
+using noDoom.Services.Bluesky;
 namespace noDoom.Controllers
 {
     [ApiController]
     [Route("api/bluesky")]
     public class BlueskyController : ControllerBase
     {
-        private readonly HttpClient _httpClient;
+        private readonly IBlueskyAuthService _authService;
         private readonly Client _supabaseClient;
         private readonly IRedisService _redisService;
         private readonly ILogger<BlueskyController> _logger;
 
         public BlueskyController(
-            IHttpClientFactory httpClientFactory, 
+            IBlueskyAuthService authService,
             Client supabaseClient,
             IRedisService redisService,
             ILogger<BlueskyController> logger)
         {
-            _httpClient = httpClientFactory.CreateClient();
+            _authService = authService;
             _supabaseClient = supabaseClient;
             _redisService = redisService;
             _logger = logger;
@@ -38,12 +39,7 @@ namespace noDoom.Controllers
                     return Unauthorized(new { message = "User not authenticated" });
                 }
 
-                var response = await _httpClient.PostAsJsonAsync(
-                    "https://bsky.social/xrpc/com.atproto.server.createSession", 
-                    new { identifier = credentials.Username, password = credentials.AppPassword }
-                );
-                
-                var authData = await response.Content.ReadFromJsonAsync<BlueskyAuthResponse>();
+                var authData = await _authService.CreateSessionAsync(credentials);
                 
                 // Store access token in Redis with 2-hour TTL
                 await _redisService.SetAccessTokenAsync(authData.Did, authData.AccessJwt);
@@ -87,17 +83,7 @@ namespace noDoom.Controllers
                 if (connection != null)
                 {
                     // Call Bluesky's deleteSession endpoint with refresh token
-                    _httpClient.DefaultRequestHeaders.Clear();
-                    _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", connection.RefreshToken);
-                    var response = await _httpClient.PostAsync("https://bsky.social/xrpc/com.atproto.server.deleteSession", null);
-                    
-                    if (!response.IsSuccessStatusCode)
-                    {
-                        var content = await response.Content.ReadAsStringAsync();
-                        Console.WriteLine($"Failed to delete Bluesky session: {response.StatusCode}");
-                        Console.WriteLine($"Response content: {content}");
-                        return BadRequest(new { message = "Failed to disconnect from Bluesky." });
-                    }
+                    await _authService.DeleteSessionAsync(connection.RefreshToken);
                 }
 
                 // Delete the connection from Supabase
