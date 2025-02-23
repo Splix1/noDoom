@@ -48,20 +48,26 @@ export function MediaGallery({ media, alt, onModalChange, isQuoted = false }: Me
           >
             {item.type === 'image' ? (
               <div className="relative w-full h-full">
-                <Image
-                  src={item.url}
-                  alt={alt}
-                  fill
-                  className={cn(
-                    "object-contain cursor-pointer",
-                    !isQuoted && "object-cover"
-                  )}
-                  sizes="(max-width: 1280px) 100vw, 1024px"
-                  onClick={() => {
-                    setSelectedImageIndex(index);
-                    onModalChange(true);
-                  }}
-                />
+                {item.url && item.url.startsWith('http') ? (
+                  <Image
+                    src={item.url}
+                    alt={alt}
+                    fill
+                    className={cn(
+                      "object-contain cursor-pointer",
+                      !isQuoted && "object-cover"
+                    )}
+                    sizes="(max-width: 1280px) 100vw, 1024px"
+                    onClick={() => {
+                      setSelectedImageIndex(index);
+                      onModalChange(true);
+                    }}
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-accent/10">
+                    <span className="text-sm text-muted-foreground">Invalid image URL</span>
+                  </div>
+                )}
               </div>
             ) : (
               <video
