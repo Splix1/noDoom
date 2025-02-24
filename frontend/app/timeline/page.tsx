@@ -371,14 +371,6 @@ export default function TimelinePage() {
                     `}>
                       {post.content}
                     </div>
-                    {post.content.split(' ').length > 50 && (
-                      <button
-                        onClick={() => togglePostExpansion(post.id)}
-                        className="mt-2 text-sm text-primary hover:text-primary/80 transition-colors font-medium hover:underline"
-                      >
-                        {expandedPosts.has(post.id) ? 'Show less' : 'Show more'}
-                      </button>
-                    )}
                   </div>
 
                   {post.media && post.media.length > 0 && (
