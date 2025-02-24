@@ -62,10 +62,14 @@ namespace noDoom.Services.Bluesky
             {
                 foreach (var image in embed.Images)
                 {
+                    var imageUrl = image.Image?.Ref?.Link != null
+                        ? $"https://cdn.bsky.app/img/feed_thumbnail/plain/{did}/{image.Image.Ref.Link}@jpeg"
+                        : null;
+
                     mediaList.Add(new MediaContent
                     {
                         Type = "image",
-                        Url = image.Image?.Ref?.Link,
+                        Url = imageUrl,
                     });
                 }
             }
