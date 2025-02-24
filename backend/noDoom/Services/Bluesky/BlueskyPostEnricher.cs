@@ -17,7 +17,7 @@ namespace noDoom.Services.Bluesky
             _authService = authService;
         }
 
-        public async Task<List<UnifiedPost>> EnrichPostsWithMetrics(BlueskyTimelineResponse timeline)
+        public List<UnifiedPost> EnrichPostsWithMetrics(BlueskyTimelineResponse timeline)
         {
             var unifiedPosts = new List<UnifiedPost>();
             
@@ -41,7 +41,7 @@ namespace noDoom.Services.Bluesky
             return unifiedPosts;
         }
 
-        public async Task<UnifiedPost?> CreateQuotedPost(Record? record)
+        public UnifiedPost CreateQuotedPost(Record? record)
         {
             if (record == null) return null;
             
@@ -62,10 +62,14 @@ namespace noDoom.Services.Bluesky
             {
                 foreach (var image in embed.Images)
                 {
+                    var imageUrl = image.Image?.Ref?.Link != null
+                        ? $"https://cdn.bsky.app/img/feed_thumbnail/plain/{did}/{image.Image.Ref.Link}@jpeg"
+                        : null;
+
                     mediaList.Add(new MediaContent
                     {
                         Type = "image",
-                        Url = image.Image?.Ref?.Link,
+                        Url = imageUrl,
                     });
                 }
             }

@@ -31,7 +31,7 @@ namespace noDoom.Services.Bluesky
                 new AuthenticationHeaderValue("Bearer", accessToken);
 
             var response = await _httpClient.GetAsync(
-                "https://bsky.social/xrpc/app.bsky.feed.getTimeline"
+                "https://bsky.social/xrpc/app.bsky.feed.getTimeline?limit=100"
             );
 
             if (!response.IsSuccessStatusCode)
@@ -40,7 +40,11 @@ namespace noDoom.Services.Bluesky
             }
 
             var timeline = await response.Content.ReadFromJsonAsync<BlueskyTimelineResponse>();
-            return await _postEnricher.EnrichPostsWithMetrics(timeline);
+            
+            // Filter out replies before enriching
+            timeline.Feed = timeline.Feed.Where(feed => feed.Reply == null).ToArray();
+            
+            return _postEnricher.EnrichPostsWithMetrics(timeline);
         }
     }
 } 
