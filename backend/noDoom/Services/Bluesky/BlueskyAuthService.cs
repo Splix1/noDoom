@@ -66,6 +66,13 @@ namespace noDoom.Services.Bluesky
             // Store new access token in Redis
             await _redisService.SetAccessTokenAsync(did, authData.AccessJwt);
 
+            // Store new refresh token in Supabase
+            connection.RefreshToken = authData.RefreshJwt;
+            await _supabaseClient
+                .From<Connection>()
+                .Where(x => x.DID == did)
+                .Update(connection);
+
             return authData.AccessJwt;
         }
 

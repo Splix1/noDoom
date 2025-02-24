@@ -44,7 +44,7 @@ namespace noDoom.Services.Bluesky
             // Filter out replies before enriching
             timeline.Feed = timeline.Feed.Where(feed => feed.Reply == null).ToArray();
             
-            return await _postEnricher.EnrichPostsWithMetrics(timeline);
+            return _postEnricher.EnrichPostsWithMetrics(timeline);
         }
     }
 } 
