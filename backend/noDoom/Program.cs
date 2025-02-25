@@ -6,7 +6,7 @@ using System.Text;
 using StackExchange.Redis;
 using noDoom.Services;
 using noDoom.Services.Bluesky;
-
+using noDoom.Repositories;
 var builder = WebApplication.CreateBuilder(args);
 
 string supabaseUrl = builder.Configuration["Supabase:Url"];
@@ -44,6 +44,7 @@ builder.Services.AddSingleton(supabaseClient);
 builder.Services.AddHttpClient<IBlueskyAuthService, BlueskyAuthService>();
 builder.Services.AddHttpClient<IBlueskyTimelineService, BlueskyTimelineService>();
 builder.Services.AddScoped<IBlueskyPostEnricher, BlueskyPostEnricher>();
+builder.Services.AddScoped<IConnectionRepository, ConnectionRepository>();
 
 // Add Redis configuration
 var redisConnection = ConnectionMultiplexer.Connect(builder.Configuration["Redis:ConnectionString"]);

@@ -5,6 +5,8 @@ using System.Security.Claims;
 using Microsoft.Extensions.Logging;
 using noDoom.Services;
 using noDoom.Services.Bluesky;
+using noDoom.Repositories;
+
 namespace noDoom.Controllers
 {
     [ApiController]
@@ -15,17 +17,21 @@ namespace noDoom.Controllers
         private readonly Client _supabaseClient;
         private readonly IRedisService _redisService;
         private readonly ILogger<BlueskyController> _logger;
+        private readonly IConnectionRepository _connectionRepository;
 
         public BlueskyController(
             IBlueskyAuthService authService,
             Client supabaseClient,
             IRedisService redisService,
-            ILogger<BlueskyController> logger)
+            ILogger<BlueskyController> logger,
+            IConnectionRepository connectionRepository
+        )
         {
             _authService = authService;
             _supabaseClient = supabaseClient;
             _redisService = redisService;
             _logger = logger;
+            _connectionRepository = connectionRepository;
         }
 
         [HttpPost("connect")]
@@ -53,7 +59,7 @@ namespace noDoom.Controllers
                     UserId = Guid.Parse(userId),
                 };
 
-                await _supabaseClient.From<Connection>().Insert(newConnection);
+                await _connectionRepository.CreateConnectionAsync(newConnection);
                 
                 return Ok(new { message = "Bluesky account connected successfully!"});
             } catch (Exception ex) {
@@ -75,23 +81,15 @@ namespace noDoom.Controllers
             try {
                 // Get the connection first to get the access token
                 var parsedUserId = Guid.Parse(userId);
-                var connection = await _supabaseClient
-                    .From<Connection>()
-                    .Where(x => x.UserId == parsedUserId && x.Platform == "bluesky")
-                    .Single();
+
+                var connection = await _connectionRepository.GetConnectionAsync(parsedUserId, "bluesky");
 
                 if (connection != null)
                 {
-                    // Call Bluesky's deleteSession endpoint with refresh token
-                    await _authService.DeleteSessionAsync(connection.RefreshToken);
+                    // Call Bluesky's deleteSession endpoint & delete the connection from Supabase
+                    await _authService.DeleteSessionAsync(connection.RefreshToken, parsedUserId);
                 }
-
-                // Delete the connection from Supabase
-                await _supabaseClient
-                    .From<Connection>()
-                    .Where(x => x.UserId == parsedUserId && x.Platform == "bluesky")
-                    .Delete();
-                    
+   
                 return Ok(new { message = "Bluesky account disconnected successfully!" });
             } catch (Exception ex) {
                 Console.WriteLine($"Bluesky disconnect error: {ex.Message}");

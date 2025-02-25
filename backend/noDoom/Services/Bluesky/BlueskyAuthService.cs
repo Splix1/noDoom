@@ -14,20 +14,24 @@ namespace noDoom.Services.Bluesky
         private readonly IRedisService _redisService;
         private readonly Client _supabaseClient;
         private readonly ILogger<BlueskyAuthService> _logger;
+        private readonly IConnectionRepository _connectionRepository;
 
         public BlueskyAuthService(
             HttpClient httpClient,
             IRedisService redisService,
             Client supabaseClient,
-            ILogger<BlueskyAuthService> logger)
+            ILogger<BlueskyAuthService> logger,
+            IConnectionRepository connectionRepository
+        )
         {
             _httpClient = httpClient;
             _redisService = redisService;
             _supabaseClient = supabaseClient;
             _logger = logger;
+            _connectionRepository = connectionRepository;
         }
 
-        public async Task<string> GetValidAccessTokenAsync(string did)
+        public async Task<string> GetValidAccessTokenAsync(string did, Guid userId)
         {
             // Try to get access token from Redis
             var accessToken = await _redisService.GetAccessTokenAsync(did);
@@ -37,10 +41,7 @@ namespace noDoom.Services.Bluesky
             }
 
             // If not in Redis, get refresh token from Supabase
-            var connection = await _supabaseClient
-                .From<Connection>()
-                .Where(x => x.DID == did)
-                .Single();
+            var connection = await _connectionRepository.GetConnectionAsync(userId, "bluesky");
 
             if (connection == null)
             {
@@ -68,10 +69,7 @@ namespace noDoom.Services.Bluesky
 
             // Store new refresh token in Supabase
             connection.RefreshToken = authData.RefreshJwt;
-            await _supabaseClient
-                .From<Connection>()
-                .Where(x => x.DID == did)
-                .Update(connection);
+            await _connectionRepository.UpdateConnectionAsync(connection);
 
             return authData.AccessJwt;
         }
@@ -91,7 +89,7 @@ namespace noDoom.Services.Bluesky
             return await response.Content.ReadFromJsonAsync<BlueskyAuthResponse>();
         }
 
-        public async Task DeleteSessionAsync(string refreshToken)
+        public async Task DeleteSessionAsync(string refreshToken, Guid userId)
         {
             _httpClient.DefaultRequestHeaders.Authorization = 
                 new AuthenticationHeaderValue("Bearer", refreshToken);
@@ -105,6 +103,8 @@ namespace noDoom.Services.Bluesky
             {
                 throw new UnauthorizedAccessException("Failed to delete Bluesky session");
             }
+
+            await _connectionRepository.DeleteConnectionAsync(userId, "bluesky");
         }
     }
 } 
