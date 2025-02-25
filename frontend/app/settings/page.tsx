@@ -5,26 +5,42 @@ import { ThemeSwitcher } from "@/components/theme-switcher";
 import { BlueskyCard } from "@/components/connection-cards/bluesky-card";
 import { RedditCard } from "@/components/connection-cards/reddit-card";
 
+interface Connection {
+  platform: string;
+  handle?: string | null;
+}
+
 export default async function SettingsPage() {
   const supabase = await createClient();
 
   const {
     data: { user },
+    error: userError,
   } = await supabase.auth.getUser();
   
   if (!user) {
     return redirect("/sign-in");
   }
 
-  // Get connection states from database
-  const { data: connections } = await supabase
-    .from('Connections')
-    .select('platform, handle')
-    .eq('user_id', user.id);
+  // Get access token for API call
+  const { data: { session } } = await supabase.auth.getSession();
+  const accessToken = session?.access_token;
 
-  const blueskyConnected = connections?.some(c => c.platform === 'bluesky') ?? false;
-  const blueskyHandle = connections?.find(c => c.platform === 'bluesky' && c.handle !== null)?.handle;
-  const redditConnected = connections?.some(c => c.platform === 'reddit') ?? false;
+  // Get connection states from API
+  const response = await fetch(`http://localhost:5115/api/connections`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+  
+  const connections = await response.json() as Connection[];
+
+  // Create a mapped object of connections
+  const connectionMap = Object.fromEntries(
+    new Map(connections.map(conn => [conn.platform, conn.handle || true]))
+  );
+  
+
 
   return (
     <div className="flex-1 w-full flex flex-col gap-4 px-4">
@@ -32,8 +48,11 @@ export default async function SettingsPage() {
       
       {/* Connections Section */}
       <div className="flex flex-col gap-4">
-        <BlueskyCard isConnected={blueskyConnected} handle={blueskyHandle} />
-        <RedditCard isConnected={redditConnected} />
+        <BlueskyCard 
+          isConnected={'bluesky' in connectionMap} 
+          handle={typeof connectionMap.bluesky === 'string' ? connectionMap.bluesky : null} 
+        />
+        <RedditCard isConnected={'reddit' in connectionMap} />
 
         <h1 className="text-2xl font-semibold">User Settings</h1>
         
