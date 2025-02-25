@@ -16,17 +16,21 @@ namespace noDoom.Controllers
         private readonly Client _supabaseClient;
         private readonly ILogger<TimelineController> _logger;
         private readonly IRedisService _redisService;
+        private readonly IConnectionRepository _connectionRepository;
 
         public TimelineController(
             IBlueskyTimelineService blueskyTimelineService, 
             Client supabaseClient,
             IRedisService redisService,
-            ILogger<TimelineController> logger)
+            ILogger<TimelineController> logger,
+            IConnectionRepository connectionRepository
+        )
         {
             _blueskyTimelineService = blueskyTimelineService;
             _supabaseClient = supabaseClient;
             _redisService = redisService;
             _logger = logger;
+            _connectionRepository = connectionRepository;
         }
 
         [HttpGet]
@@ -49,17 +53,14 @@ namespace noDoom.Controllers
 
                 // If not in cache, fetch from Bluesky
                 var parsedUserId = Guid.Parse(userId);
-                var connection = await _supabaseClient
-                    .From<Connection>()
-                    .Where(x => x.UserId == parsedUserId && x.Platform == "bluesky")
-                    .Single();
+                var connection = await _connectionRepository.GetConnectionAsync(parsedUserId, "bluesky");
 
                 if (connection == null)
                 {
                     return BadRequest(ApiResponse<List<UnifiedPost>>.CreateError("No Bluesky connection found"));
                 }
 
-                var posts = await _blueskyTimelineService.GetTimelinePostsAsync(connection.DID);
+                var posts = await _blueskyTimelineService.GetTimelinePostsAsync(connection.DID, connection.UserId);
                 var sortedPosts = posts.OrderByDescending(p => p.LikeCount).Take(15).ToList();
                 
                 // Cache the posts

@@ -24,9 +24,9 @@ namespace noDoom.Services.Bluesky
             _logger = logger;
         }
 
-        public async Task<List<UnifiedPost>> GetTimelinePostsAsync(string did)
+        public async Task<List<UnifiedPost>> GetTimelinePostsAsync(string did, Guid userId)
         {
-            var accessToken = await _authService.GetValidAccessTokenAsync(did);
+            var accessToken = await _authService.GetValidAccessTokenAsync(did, userId);
             _httpClient.DefaultRequestHeaders.Authorization = 
                 new AuthenticationHeaderValue("Bearer", accessToken);
 
