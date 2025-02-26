@@ -1,6 +1,6 @@
 using noDoom.Models;
 
-namespace noDoom.Services.Bluesky
+namespace noDoom.Services.Bluesky.Interfaces
 {
     public interface IBlueskyPostEnricher
     {

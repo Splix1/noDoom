@@ -1,6 +1,6 @@
 using noDoom.Models;
 using Supabase;
-
+using noDoom.Repositories.Interfaces;
 namespace noDoom.Repositories
 {
     public class ConnectionRepository : IConnectionRepository

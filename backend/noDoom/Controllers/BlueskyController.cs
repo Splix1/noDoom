@@ -6,6 +6,8 @@ using Microsoft.Extensions.Logging;
 using noDoom.Services;
 using noDoom.Services.Bluesky;
 using noDoom.Repositories;
+using noDoom.Services.Bluesky.Interfaces;
+using noDoom.Repositories.Interfaces;
 
 namespace noDoom.Controllers
 {

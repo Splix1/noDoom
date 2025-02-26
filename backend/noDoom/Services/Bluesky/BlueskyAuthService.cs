@@ -5,6 +5,8 @@ using Microsoft.Extensions.Logging;
 using System.Net.Http.Headers;
 using noDoom.Models;
 using Supabase;
+using noDoom.Services.Bluesky.Interfaces;
+using noDoom.Repositories.Interfaces;
 
 namespace noDoom.Services.Bluesky
 {
