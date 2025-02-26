@@ -2,6 +2,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using Microsoft.Extensions.Logging;
 using noDoom.Models;
+using noDoom.Services.Bluesky.Interfaces;
 
 namespace noDoom.Services.Bluesky
 {

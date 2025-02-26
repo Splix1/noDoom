@@ -4,7 +4,8 @@ using noDoom.Models;
 using System.Security.Claims;
 using noDoom.Services;
 using Microsoft.Extensions.Logging;
-using noDoom.Services.Bluesky;
+using noDoom.Services.Bluesky.Interfaces;
+using noDoom.Repositories.Interfaces;
 
 namespace noDoom.Controllers
 {

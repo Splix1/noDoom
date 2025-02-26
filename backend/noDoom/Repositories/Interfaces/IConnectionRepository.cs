@@ -1,5 +1,6 @@
 using noDoom.Models;
 
+namespace noDoom.Repositories.Interfaces;
 public interface IConnectionRepository
 {
     Task<Connection?> GetConnectionAsync(Guid userId, string platform);
