@@ -20,13 +20,15 @@ namespace noDoom.Controllers
         private readonly IRedisService _redisService;
         private readonly ILogger<BlueskyController> _logger;
         private readonly IConnectionRepository _connectionRepository;
+        private readonly IBlueskyTimelineService _blueskyTimelineService;
 
         public BlueskyController(
             IBlueskyAuthService authService,
             Client supabaseClient,
             IRedisService redisService,
             ILogger<BlueskyController> logger,
-            IConnectionRepository connectionRepository
+            IConnectionRepository connectionRepository,
+            IBlueskyTimelineService blueskyTimelineService
         )
         {
             _authService = authService;
@@ -34,6 +36,7 @@ namespace noDoom.Controllers
             _redisService = redisService;
             _logger = logger;
             _connectionRepository = connectionRepository;
+            _blueskyTimelineService = blueskyTimelineService;
         }
 
         [HttpPost("connect")]
@@ -62,6 +65,10 @@ namespace noDoom.Controllers
                 };
 
                 await _connectionRepository.CreateConnectionAsync(newConnection);
+                
+                // Fetch and cache initial posts
+                var posts = await _blueskyTimelineService.GetTimelinePostsAsync(authData.Did, Guid.Parse(userId));
+                await _redisService.CacheTimelinePostsAsync(userId, "timeline", posts);
                 
                 return Ok(new { message = "Bluesky account connected successfully!"});
             } catch (Exception ex) {

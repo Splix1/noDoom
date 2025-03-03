@@ -1,6 +1,7 @@
 using noDoom.Models;
 using Supabase;
 using noDoom.Repositories.Interfaces;
+
 namespace noDoom.Repositories
 {
     public class ConnectionRepository : IConnectionRepository
@@ -33,24 +34,24 @@ namespace noDoom.Repositories
         public async Task CreateConnectionAsync(Connection connection)
         {
             await _supabaseClient
-            .From<Connection>()
-            .Insert(connection);
+                .From<Connection>()
+                .Insert(connection);
         }
         
         public async Task DeleteConnectionAsync(Guid userId, string platform)
         {
             await _supabaseClient
-            .From<Connection>()
-            .Where(x => x.UserId == userId && x.Platform == platform)
-            .Delete();
+                .From<Connection>()
+                .Where(x => x.UserId == userId && x.Platform == platform)
+                .Delete();
         }
 
         public async Task UpdateConnectionAsync(Connection connection)
         {
             await _supabaseClient
-            .From<Connection>()
-            .Where(x => x.UserId == connection.UserId && x.Platform == connection.Platform)
-            .Update(connection);
+                .From<Connection>()
+                .Where(x => x.UserId == connection.UserId && x.Platform == connection.Platform)
+                .Update(connection);
         }
     }
 }

@@ -6,6 +6,7 @@ using noDoom.Services;
 using Microsoft.Extensions.Logging;
 using noDoom.Services.Bluesky.Interfaces;
 using noDoom.Repositories.Interfaces;
+using System.Text.Json;
 
 namespace noDoom.Controllers
 {
@@ -62,6 +63,7 @@ namespace noDoom.Controllers
                 }
 
                 var posts = await _blueskyTimelineService.GetTimelinePostsAsync(connection.DID, connection.UserId);
+
                 
                 // Cache the posts
                 await _redisService.CacheTimelinePostsAsync(userId, "timeline", posts);
