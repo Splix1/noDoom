@@ -62,12 +62,11 @@ namespace noDoom.Controllers
                 }
 
                 var posts = await _blueskyTimelineService.GetTimelinePostsAsync(connection.DID, connection.UserId);
-                var sortedPosts = posts.OrderByDescending(p => p.LikeCount).Take(15).ToList();
                 
                 // Cache the posts
-                await _redisService.CacheTimelinePostsAsync(userId, "timeline", sortedPosts);
+                await _redisService.CacheTimelinePostsAsync(userId, "timeline", posts);
                 
-                return Ok(ApiResponse<List<UnifiedPost>>.CreateSuccess(sortedPosts));
+                return Ok(ApiResponse<List<UnifiedPost>>.CreateSuccess(posts));
             }
             catch (Exception ex)
             {
