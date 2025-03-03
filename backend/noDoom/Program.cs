@@ -7,6 +7,8 @@ using StackExchange.Redis;
 using noDoom.Services;
 using noDoom.Services.Bluesky;
 using noDoom.Repositories;
+using noDoom.Services.Bluesky.Interfaces;
+using noDoom.Repositories.Interfaces;
 var builder = WebApplication.CreateBuilder(args);
 
 string supabaseUrl = builder.Configuration["Supabase:Url"];

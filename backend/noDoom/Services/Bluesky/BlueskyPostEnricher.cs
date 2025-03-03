@@ -1,6 +1,7 @@
 using noDoom.Models;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using noDoom.Services.Bluesky.Interfaces;
 
 namespace noDoom.Services.Bluesky
 {

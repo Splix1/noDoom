@@ -1,6 +1,6 @@
 using noDoom.Models;
 using Supabase;
-
+using noDoom.Repositories.Interfaces;
 namespace noDoom.Repositories
 {
     public class ConnectionRepository : IConnectionRepository
@@ -18,6 +18,16 @@ namespace noDoom.Repositories
                 .From<Connection>()
                 .Where(x => x.UserId == userId && x.Platform == platform)
                 .Single();
+        }
+
+        public async Task<List<Connection>> GetConnectionsAsync(Guid userId)
+        {
+            var response = await _supabaseClient
+                .From<Connection>()
+                .Where(x => x.UserId == userId)
+                .Get();
+
+            return response.Models;
         }
 
         public async Task CreateConnectionAsync(Connection connection)
