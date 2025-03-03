@@ -41,8 +41,16 @@ namespace noDoom.Services.Bluesky
 
             var timeline = await response.Content.ReadFromJsonAsync<BlueskyTimelineResponse>();
             
-            // Filter out replies before enriching
-            timeline.Feed = timeline.Feed.Where(feed => feed.Reply == null).ToArray();
+            // Filter out replies, remove duplicates, and get top 15 by like count
+            var uniquePosts = timeline.Feed
+                .Where(feed => feed.Reply == null)
+                .GroupBy(feed => feed.Post.Uri)
+                .Select(group => group.First())
+                .OrderByDescending(feed => feed.Post.IndexedAt)
+                .Take(15)
+                .ToArray();
+            
+            timeline.Feed = uniquePosts;
             
             return _postEnricher.EnrichPostsWithMetrics(timeline);
         }
