@@ -91,7 +91,7 @@ namespace noDoom.Services.Bluesky
             return await response.Content.ReadFromJsonAsync<BlueskyAuthResponse>();
         }
 
-        public async Task DeleteSessionAsync(string refreshToken, Guid userId)
+        public async Task DeleteSessionAsync(string refreshToken, Guid userId, string did)
         {
             _httpClient.DefaultRequestHeaders.Authorization = 
                 new AuthenticationHeaderValue("Bearer", refreshToken);
@@ -107,6 +107,7 @@ namespace noDoom.Services.Bluesky
             }
 
             await _connectionRepository.DeleteConnectionAsync(userId, "bluesky");
+            await _redisService.RemoveAccessTokenAsync(did);
         }
     }
 } 
