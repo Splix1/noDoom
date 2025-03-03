@@ -89,7 +89,7 @@ namespace noDoom.Controllers
                 if (connection != null)
                 {
                     // Call Bluesky's deleteSession endpoint & delete the connection from Supabase
-                    await _authService.DeleteSessionAsync(connection.RefreshToken, parsedUserId);
+                    await _authService.DeleteSessionAsync(connection.RefreshToken, parsedUserId, connection.DID);
                 }
    
                 return Ok(new { message = "Bluesky account disconnected successfully!" });
