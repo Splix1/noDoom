@@ -1,5 +1,6 @@
 using StackExchange.Redis;
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
 
 namespace noDoom.Services;
 
@@ -14,6 +15,8 @@ public interface IRedisService
     Task RemoveAccessTokenAsync(string did);
     Task<List<UnifiedPost>?> GetCachedTimelinePostsAsync(string userId, string timelineType);
     Task CacheTimelinePostsAsync(string userId, string timelineType, List<UnifiedPost> posts);
+    Task UpdateCachedTimelinePostsAsync(string userId, string timelineKey, List<UnifiedPost> posts);
+    Task CacheNewConnectionPostsAsync(string userId, string timelineType, List<UnifiedPost> posts);
 }
 
 public class RedisService : IRedisService
@@ -22,11 +25,13 @@ public class RedisService : IRedisService
     private readonly IDatabase _db;
     private static readonly TimeSpan AccessTokenTTL = TimeSpan.FromHours(2);
     private static readonly TimeSpan TimelinePostsTTL = TimeSpan.FromHours(6);
+    private readonly ILogger<RedisService> _logger;
 
-    public RedisService(IConnectionMultiplexer redis)
+    public RedisService(IConnectionMultiplexer redis, ILogger<RedisService> logger)
     {
         _redis = redis;
         _db = redis.GetDatabase();
+        _logger = logger;
     }
 
     public async Task<T?> GetAsync<T>(string key)
@@ -73,11 +78,33 @@ public class RedisService : IRedisService
 
     public async Task<List<UnifiedPost>?> GetCachedTimelinePostsAsync(string userId, string timelineType)
     {
-        return await GetAsync<List<UnifiedPost>>($"timeline:{userId}:{timelineType}");
+        return await GetAsync<List<UnifiedPost>>($"{userId}:{timelineType}");
     }
 
     public async Task CacheTimelinePostsAsync(string userId, string timelineType, List<UnifiedPost> posts)
     {
-        await SetAsync($"timeline:{userId}:{timelineType}", posts, TimelinePostsTTL);
+        await SetAsync($"{userId}:{timelineType}", posts, TimelinePostsTTL);
+    }
+
+    public async Task UpdateCachedTimelinePostsAsync(string userId, string timelineKey, List<UnifiedPost> posts)
+    {
+        var key = $"{userId}:{timelineKey}";
+        var serializedPosts = JsonSerializer.Serialize(posts);
+        await _db.StringSetAsync(key, serializedPosts, keepTtl: true);
+    }
+
+    public async Task CacheNewConnectionPostsAsync(string userId, string timelineType, List<UnifiedPost> posts)
+    {
+        var cachedPosts = await GetCachedTimelinePostsAsync(userId, timelineType);
+        
+        if (cachedPosts == null)    
+        {
+            await CacheTimelinePostsAsync(userId, timelineType, posts);
+        }
+        else
+        {
+            var newPosts = cachedPosts.Concat(posts).ToList();
+            await UpdateCachedTimelinePostsAsync(userId, timelineType, newPosts);
+        }
     }
 } 
