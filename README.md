@@ -17,3 +17,18 @@ Technical limitations make these platforms difficult to integrate:
 - **Facebook/Instagram**: Meta's APIs are restrictive, making it impossible to fetch user posts without special access
 
 I'm focusing on platforms that provide robust, developer-friendly APIs that allow me to deliver a reliable user experience while maintaining my core mission of promoting healthier social media consumption.
+
+## Tech Stack
+
+### Backend
+- .NET 8.0
+- ASP.NET Core Web API
+- Supabase (PostgreSQL)
+- Redis
+- Docker
+
+### Frontend
+- React
+- TypeScript
+- Next.js
+- Tailwind
