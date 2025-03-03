@@ -78,34 +78,31 @@ public class RedisService : IRedisService
 
     public async Task<List<UnifiedPost>?> GetCachedTimelinePostsAsync(string userId, string timelineType)
     {
-        return await GetAsync<List<UnifiedPost>>($"timeline:{userId}:{timelineType}");
+        return await GetAsync<List<UnifiedPost>>($"{userId}:{timelineType}");
     }
 
     public async Task CacheTimelinePostsAsync(string userId, string timelineType, List<UnifiedPost> posts)
     {
-        await SetAsync($"timeline:{userId}:{timelineType}", posts, TimelinePostsTTL);
+        await SetAsync($"{userId}:{timelineType}", posts, TimelinePostsTTL);
     }
 
     public async Task UpdateCachedTimelinePostsAsync(string userId, string timelineKey, List<UnifiedPost> posts)
     {
-        var key = $"timeline:{userId}:{timelineKey}";
+        var key = $"{userId}:{timelineKey}";
         var serializedPosts = JsonSerializer.Serialize(posts);
         await _db.StringSetAsync(key, serializedPosts, keepTtl: true);
     }
 
     public async Task CacheNewConnectionPostsAsync(string userId, string timelineType, List<UnifiedPost> posts)
     {
-        _logger.LogInformation($"Attempting to cache {posts.Count} new posts for user {userId}, timeline type {timelineType}");
         var cachedPosts = await GetCachedTimelinePostsAsync(userId, timelineType);
         
         if (cachedPosts == null)    
         {
-            _logger.LogInformation($"No existing cache found, caching {posts.Count} posts");
             await CacheTimelinePostsAsync(userId, timelineType, posts);
         }
         else
         {
-            _logger.LogInformation($"Found {cachedPosts.Count} existing posts, adding {posts.Count} new posts");
             var newPosts = cachedPosts.Concat(posts).ToList();
             await UpdateCachedTimelinePostsAsync(userId, timelineType, newPosts);
         }
