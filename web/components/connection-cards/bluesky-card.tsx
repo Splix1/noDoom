@@ -6,13 +6,13 @@ import { createClient } from '@/utils/supabase/client';
 interface BlueskyCardProps {
   isConnected: boolean;
   handle: string | null;
-  onDisconnect?: () => void;
+  onStatusChange?: () => void;
 }
 
-export function BlueskyCard({ isConnected: initialIsConnected, handle: initialHandle }: BlueskyCardProps) {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+export function BlueskyCard({ isConnected: initialIsConnected, handle: initialHandle, onStatusChange }: BlueskyCardProps) {
   const [isConnected, setIsConnected] = useState(initialIsConnected);
   const [handle, setHandle] = useState(initialHandle);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const supabase = createClient();
 
   const handleConnect = async () => {
@@ -37,6 +37,7 @@ export function BlueskyCard({ isConnected: initialIsConnected, handle: initialHa
         if (response.ok) {
           setIsConnected(false);
           setHandle(null);
+          if (onStatusChange) onStatusChange();
         } else {
           console.error('Failed to disconnect from Bluesky');
         }
@@ -85,6 +86,7 @@ export function BlueskyCard({ isConnected: initialIsConnected, handle: initialHa
           setIsConnected(true);
           setHandle(newHandle);
           setIsModalOpen(false);
+          if (onStatusChange) onStatusChange();
         }}
       />
     </>

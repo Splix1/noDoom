@@ -5,12 +5,14 @@ import { Switch } from "@/components/ui/switch";
 interface RedditCardProps {
   isConnected: boolean;
   onDisconnect?: () => void;
+  onStatusChange?: () => void;
 }
 
-export function RedditCard({ isConnected }: RedditCardProps) {
+export function RedditCard({ isConnected, onStatusChange }: RedditCardProps) {
   const handleConnect = async () => {
     if (isConnected) {
       await fetch('/api/reddit/disconnect', { method: 'POST' });
+      if (onStatusChange) onStatusChange();
     } else {
       // Implement Reddit OAuth flow
       window.location.href = '/api/reddit/connect';
