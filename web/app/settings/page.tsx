@@ -46,6 +46,13 @@ export default async function SettingsPage() {
     <div className="flex-1 w-full flex flex-col gap-4 px-4">
       <h1 className="text-2xl font-semibold">Connections</h1>
       
+      {/* Info message about connections - only show if no connections */}
+      {Object.keys(connectionMap).length === 0 && (
+        <div className="p-4 bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 rounded-lg mb-2 text-sm">
+          <p>You need to connect a Bluesky or Reddit account to view your timeline.</p>
+        </div>
+      )}
+      
       {/* Connections Section */}
       <div className="flex flex-col gap-4">
         <BlueskyCard 

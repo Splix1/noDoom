@@ -16,7 +16,7 @@ import { MediaGallery } from '@/components/MediaGallery';
 import { QuotedPost } from '@/components/QuotedPost';
 import { PlatformIcon } from '@/components/PlatformIcon';
 import { cn } from '@/lib/utils';
-
+import { useRouter } from 'next/navigation';
 type Platform = 'reddit' | 'bluesky';
 
 interface MediaContent {
@@ -261,6 +261,7 @@ export default function TimelinePage() {
   const [selectedImage, setSelectedImage] = useState<{url: string; alt: string} | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const supabase = createClient();
+  const router = useRouter();
   
 
   useEffect(() => {
@@ -279,14 +280,11 @@ export default function TimelinePage() {
         const result = await response.json();
         console.log(result);
         if (result.success) {
-          console.log(result.data);
           setPosts(result.data);
-          // setPosts(mockPosts);
         } else {
-          setError(result.error);
-          if (result.error.includes("Please reconnect your account")) {
-            // Redirect to connections page or show reconnect modal
-            console.error('Bluesky session expired, need to reconnect');
+          if(result.error === "No connections found") {
+            console.log("Redirecting to settings due to no connections");
+            router.push('/settings');
           }
         }
       } catch (error) {
@@ -295,7 +293,7 @@ export default function TimelinePage() {
       }
     };
     fetchTimeline();
-  }, []);
+  }, [router]);
   
   const togglePostExpansion = (postId: string) => {
     const newExpanded = new Set(expandedPosts);
