@@ -45,24 +45,33 @@ namespace noDoom.Controllers
                 {
                     return Unauthorized(ApiResponse<List<UnifiedPost>>.CreateError("User not authenticated"));
                 }
+                var parsedUserId = Guid.Parse(userId);
 
-                // Try to get from cache first
+                // Try to get posts from cache first
                 var cachedPosts = await _redisService.GetCachedTimelinePostsAsync(userId, "timeline");
                 if (cachedPosts != null)
                 {
                     return Ok(ApiResponse<List<UnifiedPost>>.CreateSuccess(cachedPosts));
                 }
 
-                // If not in cache, fetch from Bluesky
-                var parsedUserId = Guid.Parse(userId);
-                var connection = await _connectionRepository.GetConnectionAsync(parsedUserId, "bluesky");
-
-                if (connection == null)
+                // Construct posts based on connected platforms
+                var posts = new List<UnifiedPost>();
+                var connections = await _connectionRepository.GetConnectionsAsync(Guid.Parse(userId));
+                if (connections.Count == 0)
                 {
-                    return BadRequest(ApiResponse<List<UnifiedPost>>.CreateError("No Bluesky connection found"));
+                    return BadRequest(ApiResponse<List<UnifiedPost>>.CreateError("No connections found"));
+                }
+                var blueskyIsConnected = connections.Any(c => c.Platform == "bluesky");
+                var redditIsConnected = connections.Any(c => c.Platform == "reddit");
+
+                if (blueskyIsConnected)
+                {
+                    var connection = connections.FirstOrDefault(c => c.Platform == "bluesky");
+                    var blueskyPosts = await _blueskyTimelineService.GetTimelinePostsAsync(connection.DID, connection.UserId);
+                    posts.AddRange(blueskyPosts);
                 }
 
-                var posts = await _blueskyTimelineService.GetTimelinePostsAsync(connection.DID, connection.UserId);
+                // TODO: Construct posts from Reddit
 
                 
                 // Cache the posts

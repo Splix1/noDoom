@@ -2,8 +2,7 @@ import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import { Switch } from "@/components/ui/switch";
 import { ThemeSwitcher } from "@/components/theme-switcher";
-import { BlueskyCard } from "@/components/connection-cards/bluesky-card";
-import { RedditCard } from "@/components/connection-cards/reddit-card";
+import { ConnectionsSection } from "@/components/connections-section";
 
 interface Connection {
   platform: string;
@@ -35,41 +34,27 @@ export default async function SettingsPage() {
   
   const connections = await response.json() as Connection[];
 
-  // Create a mapped object of connections
-  const connectionMap = Object.fromEntries(
-    new Map(connections.map(conn => [conn.platform, conn.handle || true]))
-  );
-  
-
-
   return (
     <div className="flex-1 w-full flex flex-col gap-4 px-4">
       <h1 className="text-2xl font-semibold">Connections</h1>
       
-      {/* Connections Section */}
-      <div className="flex flex-col gap-4">
-        <BlueskyCard 
-          isConnected={'bluesky' in connectionMap} 
-          handle={typeof connectionMap.bluesky === 'string' ? connectionMap.bluesky : null} 
-        />
-        <RedditCard isConnected={'reddit' in connectionMap} />
+      <ConnectionsSection initialConnections={connections} />
 
-        <h1 className="text-2xl font-semibold">User Settings</h1>
-        
-        {/* Show posts only from following */}
-        <div className="flex items-center p-4 bg-card rounded-lg border w-[600px]">
-          <span className="text-sm flex-1">Show posts only from following</span>
-          <div className="ml-8">
-            <Switch />
-          </div>
+      <h1 className="text-2xl font-semibold">User Settings</h1>
+      
+      {/* Show posts only from following */}
+      <div className="flex items-center p-4 bg-card rounded-lg border w-[600px]">
+        <span className="text-sm flex-1">Show posts only from following</span>
+        <div className="ml-8">
+          <Switch />
         </div>
+      </div>
 
-        {/* Theme Switcher */}
-        <div className="flex items-center p-4 bg-card rounded-lg border w-[600px]">
-          <span className="text-sm flex-1">Theme</span>
-          <div className="ml-8">
-            <ThemeSwitcher />
-          </div>
+      {/* Theme Switcher */}
+      <div className="flex items-center p-4 bg-card rounded-lg border w-[600px]">
+        <span className="text-sm flex-1">Theme</span>
+        <div className="ml-8">
+          <ThemeSwitcher />
         </div>
       </div>
     </div>
