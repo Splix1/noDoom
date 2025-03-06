@@ -13,7 +13,7 @@ namespace noDoom.Repositories
             _supabaseClient = supabaseClient;
         }
 
-        public async Task<Connection?> GetConnectionAsync(Guid userId, string platform)
+        public async Task<Connection> GetConnectionAsync(Guid userId, string platform)
         {
             return await _supabaseClient
                 .From<Connection>()

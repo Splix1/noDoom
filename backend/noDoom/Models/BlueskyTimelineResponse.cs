@@ -4,13 +4,13 @@ using System.Text.Json.Serialization;
 public class BlueskyTimelineResponse
 {
     public TimelineFeed[] Feed { get; set; }
-    public string? Cursor { get; set; }
+    public string Cursor { get; set; }
 }
 
 public class TimelineFeed
 {
     public TimelinePost Post { get; set; }
-    public Reply? Reply { get; set; }
+    public Reply Reply { get; set; }
 }
 
 public class TimelinePost
@@ -34,14 +34,14 @@ public class Record
 {
     public string Text { get; set; }
     public DateTime CreatedAt { get; set; }
-    public Embed? Embed { get; set; }
+    public Embed Embed { get; set; }
 }
 
 public class Embed
 {
-    public BlueskyImage[]? Images { get; set; }
-    public EmbedExternal? External { get; set; }
-    public EmbeddedRecord? Record { get; set; }
+    public BlueskyImage[] Images { get; set; }
+    public EmbedExternal External { get; set; }
+    public EmbeddedRecord Record { get; set; }
 }
 
 public class EmbedExternal
@@ -49,7 +49,7 @@ public class EmbedExternal
     public string Uri { get; set; }
     public string Title { get; set; }
     public string Description { get; set; }
-    public object? Thumb { get; set; }
+    public object Thumb { get; set; }
 }
 
 public class Image
@@ -75,13 +75,13 @@ public class ReplyReference
 public class EmbeddedRecord
 {
     public string Uri { get; set; }
-    public Author? Author { get; set; }
-    public RecordValue? Value { get; set; }
+    public Author Author { get; set; }
+    public RecordValue Value { get; set; }
 }
 
 public class RecordValue
 {
-    public string? Text { get; set; }
+    public string Text { get; set; }
     public DateTime CreatedAt { get; set; }
-    public Embed? Embed { get; set; }
+    public Embed Embed { get; set; }
 }

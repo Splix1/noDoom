@@ -6,14 +6,14 @@ namespace noDoom.Services;
 
 public interface IRedisService
 {
-    Task<T?> GetAsync<T>(string key);
+    Task<T> GetAsync<T>(string key);
     Task SetAsync<T>(string key, T value, TimeSpan? expiry = null);
     Task RemoveAsync(string key);
-    Task<string?> GetAccessTokenAsync(string did);
+    Task<string> GetAccessTokenAsync(string did);
     Task SetTokensAsync(string did, string accessToken, TimeSpan? expiry = null);
     Task SetAccessTokenAsync(string did, string accessToken);
     Task RemoveAccessTokenAsync(string did);
-    Task<List<UnifiedPost>?> GetCachedTimelinePostsAsync(string userId, string timelineType);
+    Task<List<UnifiedPost>> GetCachedTimelinePostsAsync(string userId, string timelineType);
     Task CacheTimelinePostsAsync(string userId, string timelineType, List<UnifiedPost> posts);
     Task UpdateCachedTimelinePostsAsync(string userId, string timelineKey, List<UnifiedPost> posts);
     Task CacheNewConnectionPostsAsync(string userId, string timelineType, List<UnifiedPost> posts);
@@ -34,7 +34,7 @@ public class RedisService : IRedisService
         _logger = logger;
     }
 
-    public async Task<T?> GetAsync<T>(string key)
+    public async Task<T> GetAsync<T>(string key)
     {
         var value = await _db.StringGetAsync(key);
         return value.HasValue ? JsonSerializer.Deserialize<T>(value!) : default;
@@ -51,7 +51,7 @@ public class RedisService : IRedisService
         await _db.KeyDeleteAsync(key);
     }
 
-    public async Task<string?> GetAccessTokenAsync(string did)
+    public async Task<string> GetAccessTokenAsync(string did)
     {
         var value = await _db.StringGetAsync($"bluesky_access_token:{did}");
         return value.HasValue ? value.ToString() : null;
@@ -76,7 +76,7 @@ public class RedisService : IRedisService
         await _db.KeyDeleteAsync($"bluesky_access_token:{did}");
     }
 
-    public async Task<List<UnifiedPost>?> GetCachedTimelinePostsAsync(string userId, string timelineType)
+    public async Task<List<UnifiedPost>> GetCachedTimelinePostsAsync(string userId, string timelineType)
     {
         return await GetAsync<List<UnifiedPost>>($"{userId}:{timelineType}");
     }

@@ -20,8 +20,8 @@ public class Connection : BaseModel
     public string RefreshToken { get; set; }
 
     [Column("DID")]
-    public string? DID { get; set; }
+    public string DID { get; set; }
 
     [Column("handle")]
-    public string? Handle { get; set; }
+    public string Handle { get; set; }
 }

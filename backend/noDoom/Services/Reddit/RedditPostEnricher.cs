@@ -29,7 +29,7 @@ namespace noDoom.Services.Reddit
             return unifiedPosts;
         }
 
-        public List<MediaContent>? CreateMediaContent(RedditPost post)
+        public List<MediaContent> CreateMediaContent(RedditPost post)
         {
             var mediaList = new List<MediaContent>();
 
@@ -52,7 +52,7 @@ namespace noDoom.Services.Reddit
                 });
             }
             // Handle preview images
-            else if (post.Preview?.Images?.Any() == true)
+            else if (post.Preview.Images.Any() == true)
             {
                 mediaList.Add(new MediaContent
                 {
