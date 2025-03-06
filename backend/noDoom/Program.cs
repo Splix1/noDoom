@@ -9,6 +9,8 @@ using noDoom.Services.Bluesky;
 using noDoom.Repositories;
 using noDoom.Services.Bluesky.Interfaces;
 using noDoom.Repositories.Interfaces;
+using noDoom.Services.Reddit;
+using noDoom.Services.Reddit.Interfaces;
 var builder = WebApplication.CreateBuilder(args);
 
 string supabaseUrl = builder.Configuration["Supabase:Url"];
@@ -69,6 +71,9 @@ builder.Services.AddAuthentication().AddJwtBearer(options =>
     };
 });
 
+builder.Services.AddScoped<IRedditAuthService, RedditAuthService>();
+builder.Services.AddScoped<IRedditTimelineService, RedditTimelineService>();
+builder.Services.AddScoped<IRedditPostEnricher, RedditPostEnricher>();
 
 var app = builder.Build();
 
