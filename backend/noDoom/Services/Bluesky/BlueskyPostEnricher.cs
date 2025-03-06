@@ -42,7 +42,7 @@ namespace noDoom.Services.Bluesky
             return unifiedPosts;
         }
 
-        public UnifiedPost CreateQuotedPost(Record? record)
+        public UnifiedPost CreateQuotedPost(Record record)
         {
             if (record == null) return null;
             
@@ -53,7 +53,7 @@ namespace noDoom.Services.Bluesky
             };
         }
 
-        public List<MediaContent>? CreateMediaContent(Embed? embed, string did)
+        public List<MediaContent> CreateMediaContent(Embed embed, string did)
         {
             if (embed == null) return null;
 

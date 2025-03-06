@@ -3,11 +3,11 @@ namespace noDoom.Models;
 public class ApiResponse<T>
 {
     public bool Success { get; set; }
-    public T? Data { get; set; }
-    public string? Message { get; set; }
-    public string? Error { get; set; }
+    public T Data { get; set; }
+    public string Message { get; set; }
+    public string Error { get; set; }
 
-    public static ApiResponse<T> CreateSuccess(T data, string? message = null)
+    public static ApiResponse<T> CreateSuccess(T data, string message = null)
     {
         return new ApiResponse<T>
         {
@@ -17,7 +17,7 @@ public class ApiResponse<T>
         };
     }
 
-    public static ApiResponse<T> CreateError(string error, string? message = null)
+    public static ApiResponse<T> CreateError(string error, string message = null)
     {
         return new ApiResponse<T>
         {
