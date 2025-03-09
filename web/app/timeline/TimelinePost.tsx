@@ -34,18 +34,8 @@ export function TimelinePost({ post }: TimelinePostProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Filter out media from quoted posts
-  const mainPostMedia = post.media?.filter(media => {
-    // If there's no quoted post, keep all media
-    if (!post.quotedPost) return true;
-    
-    // If this is a quoted post's media URL, filter it out
-    const isQuotedMedia = post.quotedPost.media?.some(
-      quotedMedia => quotedMedia.url === media.url
-    );
-    
-    return !isQuotedMedia;
-  });
+  // Use post media directly since quotes are filtered at the backend
+  const hasMedia = post.media && post.media.length > 0;
 
   return (
     <div className="relative flex flex-col bg-card rounded-xl border shadow-sm w-full max-w-3xl mx-auto">
@@ -76,7 +66,7 @@ export function TimelinePost({ post }: TimelinePostProps) {
         </div>
 
         <div className="h-[500px] rounded-xl overflow-hidden">
-          {mainPostMedia && mainPostMedia.length > 0 ? (
+          {hasMedia ? (
             <div className="h-full">
               {post.content && (
                 <div className="px-2 pb-4">
@@ -98,7 +88,7 @@ export function TimelinePost({ post }: TimelinePostProps) {
               )}
               <div className="h-full">
                 <MediaGallery 
-                  media={mainPostMedia} 
+                  media={post.media!} 
                   alt={post.content || ''}
                   onModalChange={setIsModalOpen}
                 />
