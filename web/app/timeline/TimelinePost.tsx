@@ -49,10 +49,10 @@ export function TimelinePost({ post }: TimelinePostProps) {
     
     setIsLoading(true);
     try {
-      console.log('Handling favorite for post:', post.id, 'Type:', typeof post.id);
       const newIsFavorite = await toggleFavorite(post.id, isFavorite);
       setIsFavorite(newIsFavorite);
     } catch (error) {
+      // Keep this error log for debugging purposes
       console.error('Failed to toggle favorite:', error);
     } finally {
       setIsLoading(false);

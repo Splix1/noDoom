@@ -10,9 +10,7 @@ export async function toggleFavorite(postId: string, currentIsFavorite: boolean)
     throw new Error('No session found');
   }
 
-  console.log('Sending favorite request with postId:', postId);
   const requestBody = { postId };
-  console.log('Request body:', JSON.stringify(requestBody));
 
   const response = await fetch(`http://localhost:5115/api/favorite`, {
     method: currentIsFavorite ? 'DELETE' : 'POST',
@@ -26,7 +24,6 @@ export async function toggleFavorite(postId: string, currentIsFavorite: boolean)
 
   if (!response.ok) {
     const errorText = await response.text();
-    console.error('Failed to toggle favorite:', errorText);
     throw new Error('Failed to toggle favorite');
   }
 
@@ -42,8 +39,6 @@ export async function checkIsFavorite(postId: string): Promise<boolean> {
     throw new Error('No session found');
   }
 
-  console.log('Checking favorite status for postId:', postId);
-
   const response = await fetch(`http://localhost:5115/api/favorite?postId=${postId}`, {
     headers: {
       'Authorization': `Bearer ${session.data.session.access_token}`,
@@ -53,7 +48,6 @@ export async function checkIsFavorite(postId: string): Promise<boolean> {
 
   if (!response.ok) {
     const errorText = await response.text();
-    console.error('Failed to check favorite status:', errorText);
     throw new Error('Failed to check favorite status');
   }
 

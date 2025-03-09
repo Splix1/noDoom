@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using noDoom.Repositories.Interfaces;
+using noDoom.Services;
 using System.Text.Json;
 using System.Security.Claims;
 
@@ -12,10 +13,14 @@ namespace noDoom.Controllers;
 public class FavoriteController : ControllerBase
 {
     private readonly IFavoriteRepository _favoriteRepository;
+    private readonly IRedisService _redisService;
 
-    public FavoriteController(IFavoriteRepository favoriteRepository)
+    public FavoriteController(
+        IFavoriteRepository favoriteRepository,
+        IRedisService redisService)
     {
         _favoriteRepository = favoriteRepository;
+        _redisService = redisService;
     }
 
     [HttpGet]
@@ -38,6 +43,19 @@ public class FavoriteController : ControllerBase
 
         var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new UnauthorizedAccessException());
         await _favoriteRepository.AddFavoriteAsync(userId, request.PostId);
+
+        // Update Redis cache
+        var cachedPosts = await _redisService.GetCachedTimelinePostsAsync(userId.ToString(), "timeline");
+        if (cachedPosts != null)
+        {
+            var post = cachedPosts.FirstOrDefault(p => p.Id == request.PostId);
+            if (post != null)
+            {
+                post.IsFavorite = true;
+                await _redisService.UpdateCachedTimelinePostsAsync(userId.ToString(), "timeline", cachedPosts);
+            }
+        }
+
         var isFavorite = await _favoriteRepository.IsFavoriteAsync(userId, request.PostId);
         return Ok(new { isFavorite });
     }
@@ -48,6 +66,19 @@ public class FavoriteController : ControllerBase
         Console.WriteLine($"Removing favorite for post {request.PostId}");
         var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new UnauthorizedAccessException());
         await _favoriteRepository.RemoveFavoriteAsync(userId, request.PostId);
+
+        // Update Redis cache
+        var cachedPosts = await _redisService.GetCachedTimelinePostsAsync(userId.ToString(), "timeline");
+        if (cachedPosts != null)
+        {
+            var post = cachedPosts.FirstOrDefault(p => p.Id == request.PostId);
+            if (post != null)
+            {
+                post.IsFavorite = false;
+                await _redisService.UpdateCachedTimelinePostsAsync(userId.ToString(), "timeline", cachedPosts);
+            }
+        }
+
         return Ok(new { isFavorite = false });
     }
 }
