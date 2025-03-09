@@ -11,6 +11,11 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'cdn.frankerfacez.com',
         pathname: '/emoticon/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'picsum.photos',
+        pathname: '/**',
       }
     ],
   },
