@@ -3,9 +3,15 @@
 import Image from 'next/image';
 import { useState } from 'react';
 import { MediaGallery } from '@/components/MediaGallery';
-import { Post, TimelinePostProps } from './types';
+import { Post } from './types';
 import { formatTimeAgo } from './timelineApi';
 import { cn } from '@/lib/utils';
+import { Heart } from 'lucide-react';
+import { toggleFavorite } from './favoriteApi';
+
+interface TimelinePostProps {
+  post: Post;
+}
 
 // Platform icons component
 function PlatformIcon({ platform }: { platform: string }) {
@@ -31,93 +37,94 @@ function PlatformIcon({ platform }: { platform: string }) {
 }
 
 export function TimelinePost({ post }: TimelinePostProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(post.isFavorite || false);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Use post media directly since quotes are filtered at the backend
+  const handleFavorite = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (isLoading) return;
+    
+    setIsLoading(true);
+    try {
+      const newIsFavorite = await toggleFavorite(post.id, isFavorite);
+      setIsFavorite(newIsFavorite);
+    } catch (error) {
+      // Keep this error log for debugging purposes
+      console.error('Failed to toggle favorite:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const hasMedia = post.media && post.media.length > 0;
 
   return (
-    <div className="relative flex flex-col bg-card rounded-xl border shadow-sm w-full max-w-3xl mx-auto">
-      <div className="p-8">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
-            <div className="relative">
-              <Image
-                src={post.authorAvatar}
-                alt={post.authorName}
-                width={48}
-                height={48}
-                className="rounded-full"
-              />
-              <div className="absolute -bottom-1 -right-1 bg-background rounded-full p-0.5 shadow-sm">
-                <PlatformIcon platform={post.platform} />
-              </div>
-            </div>
-            <div>
-              <div className="font-medium">{post.authorName}</div>
-              <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                <span>@{post.authorHandle}</span>
-                <span>·</span>
-                <span>{formatTimeAgo(post.createdAt)}</span>
-              </div>
+    <article className="bg-card rounded-lg overflow-hidden">
+      {/* Header with author info */}
+      <div className="p-4">
+        <div className="flex items-center space-x-2">
+          {post.authorAvatar && (
+            <Image
+              src={post.authorAvatar}
+              alt={post.authorName}
+              width={40}
+              height={40}
+              className="rounded-full"
+            />
+          )}
+          <div className="flex-1">
+            <div className="font-semibold">{post.authorName}</div>
+            <div className="flex items-center space-x-1 text-sm text-muted-foreground">
+              <span>@{post.authorHandle}</span>
+              <span>·</span>
+              <span>{formatTimeAgo(post.createdAt)}</span>
             </div>
           </div>
         </div>
+      </div>
 
-        <div className="h-[500px] rounded-xl overflow-hidden">
-          {hasMedia ? (
-            <div className="h-full">
-              {post.content && (
-                <div className="px-2 pb-4">
-                  <div className={cn(
-                    "text-base leading-relaxed",
-                    !isExpanded && "line-clamp-2"
-                  )}>
-                    {post.content}
-                  </div>
-                  {post.content.length > 280 && (
-                    <button 
-                      onClick={() => setIsExpanded(!isExpanded)}
-                      className="text-sm text-primary hover:underline mt-1"
-                    >
-                      {isExpanded ? 'Show less' : 'Show more'}
-                    </button>
-                  )}
-                </div>
+      {/* Content area with navigation dots and favorite button */}
+      <div className="relative">
+        {/* Favorite button - positioned at the top */}
+        <div className="absolute right-4 top-1 z-10">
+          <button
+            onClick={handleFavorite}
+            disabled={isLoading}
+            className={cn(
+              "p-2 rounded-full transition-colors bg-background/80 backdrop-blur-sm",
+              "hover:bg-primary/10",
+              "focus:outline-none focus:ring-2 focus:ring-primary/20",
+              isLoading && "opacity-50 cursor-not-allowed"
+            )}
+          >
+            <Heart
+              className={cn(
+                "w-6 h-6 transition-colors",
+                isFavorite ? "fill-primary stroke-primary" : "stroke-foreground"
               )}
-              <div className="h-full">
-                <MediaGallery 
-                  media={post.media!} 
-                  alt={post.content || ''}
-                  onModalChange={setIsModalOpen}
-                />
-              </div>
-            </div>
+            />
+          </button>
+        </div>
+
+        <div className="h-[500px]">
+          {hasMedia ? (
+            <MediaGallery 
+              media={post.media!}
+              alt={post.content || ''}
+              onModalChange={setIsModalOpen}
+            />
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-accent/10 backdrop-blur-sm p-8">
-              <div className="max-w-2xl">
-                <div className={cn(
-                  "text-xl leading-relaxed text-center",
-                  !isExpanded && "line-clamp-6"
-                )}>
-                  {post.content}
-                </div>
-                {post.content.length > 280 && (
-                  <div className="text-center mt-4">
-                    <button 
-                      onClick={() => setIsExpanded(!isExpanded)}
-                      className="text-sm text-primary hover:underline"
-                    >
-                      {isExpanded ? 'Show less' : 'Show more'}
-                    </button>
-                  </div>
-                )}
+            <div className="h-full flex items-center justify-center p-6">
+              <div className="max-w-2xl text-center space-y-6">
+                {post.content}
               </div>
             </div>
           )}
         </div>
       </div>
-    </div>
+    </article>
   );
 } 

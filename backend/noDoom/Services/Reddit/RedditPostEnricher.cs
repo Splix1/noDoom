@@ -1,10 +1,18 @@
 using noDoom.Services.Reddit.Interfaces;
+using noDoom.Repositories.Interfaces;
 
 namespace noDoom.Services.Reddit
 {
     public class RedditPostEnricher : IRedditPostEnricher
     {
-        public List<UnifiedPost> EnrichPostsWithMetrics(RedditTimelineResponse posts)
+        private readonly IFavoriteRepository _favoriteRepository;
+
+        public RedditPostEnricher(IFavoriteRepository favoriteRepository)
+        {
+            _favoriteRepository = favoriteRepository;
+        }
+
+        public async Task<List<UnifiedPost>> EnrichPostsWithMetrics(RedditTimelineResponse posts, Guid userId)
         {
             var unifiedPosts = new List<UnifiedPost>();
             
@@ -22,6 +30,8 @@ namespace noDoom.Services.Reddit
                     CreatedAt = DateTimeOffset.FromUnixTimeSeconds((long)post.Data.CreatedUtc).UtcDateTime,
                     Media = CreateMediaContent(post.Data)
                 };
+
+                unifiedPost.IsFavorite = await _favoriteRepository.IsFavoriteAsync(userId, unifiedPost.Id);
                 
                 unifiedPosts.Add(unifiedPost);
             }

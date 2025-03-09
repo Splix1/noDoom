@@ -10,6 +10,7 @@ public class UnifiedPost
     public List<MediaContent> Media { get; set; }
     public int LikeCount { get; set; }
     public UnifiedPost QuotedPost { get; set; }
+    public bool IsFavorite { get; set; }
 }
 
 public class MediaContent

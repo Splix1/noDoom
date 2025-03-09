@@ -18,6 +18,7 @@ export interface Post {
   createdAt: string;
   media?: MediaContent[];
   likeCount: number;
+  isFavorite?: boolean;
   quotedPost?: Post;
 }
 

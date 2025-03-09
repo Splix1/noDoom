@@ -4,7 +4,7 @@ namespace noDoom.Services.Bluesky.Interfaces
 {
     public interface IBlueskyPostEnricher
     {
-        List<UnifiedPost> EnrichPostsWithMetrics(BlueskyTimelineResponse timeline);
+        Task<List<UnifiedPost>> EnrichPostsWithMetrics(BlueskyTimelineResponse timeline, Guid userId);
         UnifiedPost CreateQuotedPost(Record record);
         List<MediaContent> CreateMediaContent(Embed embed, string did);
     }

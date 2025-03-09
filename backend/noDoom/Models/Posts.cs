@@ -3,10 +3,13 @@ using Supabase.Postgrest.Attributes;
 using Supabase.Postgrest.Models;
 
 [Table("Posts")]
-class Post : BaseModel {
+public class Post : BaseModel {
     
     [PrimaryKey("id", false)]
     public int Id { get; set; }
+
+    [Column("external_id")]
+    public string ExternalId { get; set; }
 
     [Column("platform")]
     public string Platform { get; set; }

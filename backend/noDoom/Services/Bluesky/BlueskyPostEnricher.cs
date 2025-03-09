@@ -2,6 +2,7 @@ using noDoom.Models;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using noDoom.Services.Bluesky.Interfaces;
+using noDoom.Repositories.Interfaces;
 
 namespace noDoom.Services.Bluesky
 {
@@ -9,16 +10,19 @@ namespace noDoom.Services.Bluesky
     {
         private readonly HttpClient _httpClient;
         private readonly IBlueskyAuthService _authService;
+        private readonly IFavoriteRepository _favoriteRepository;
 
         public BlueskyPostEnricher(
             HttpClient httpClient,
-            IBlueskyAuthService authService)
+            IBlueskyAuthService authService,
+            IFavoriteRepository favoriteRepository)
         {
             _httpClient = httpClient;
             _authService = authService;
+            _favoriteRepository = favoriteRepository;
         }
 
-        public List<UnifiedPost> EnrichPostsWithMetrics(BlueskyTimelineResponse timeline)
+        public async Task<List<UnifiedPost>> EnrichPostsWithMetrics(BlueskyTimelineResponse timeline, Guid userId)
         {
             var unifiedPosts = new List<UnifiedPost>();
             
@@ -35,6 +39,8 @@ namespace noDoom.Services.Bluesky
                     CreatedAt = item.Post.Record.CreatedAt,
                     Media = CreateMediaContent(item.Post.Record.Embed, item.Post.Author.Did)
                 };
+
+                post.IsFavorite = await _favoriteRepository.IsFavoriteAsync(userId, post.Id);
                 
                 unifiedPosts.Add(post);
             }

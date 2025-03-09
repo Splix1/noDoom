@@ -74,6 +74,7 @@ builder.Services.AddAuthentication().AddJwtBearer(options =>
 builder.Services.AddScoped<IRedditAuthService, RedditAuthService>();
 builder.Services.AddScoped<IRedditTimelineService, RedditTimelineService>();
 builder.Services.AddScoped<IRedditPostEnricher, RedditPostEnricher>();
+builder.Services.AddScoped<IFavoriteRepository, FavoriteRepository>();
 
 var app = builder.Build();
 

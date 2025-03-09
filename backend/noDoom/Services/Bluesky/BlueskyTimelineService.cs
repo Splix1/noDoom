@@ -58,7 +58,7 @@ namespace noDoom.Services.Bluesky
             
             timeline.Feed = uniquePosts;
             
-            return _postEnricher.EnrichPostsWithMetrics(timeline);
+            return await _postEnricher.EnrichPostsWithMetrics(timeline, userId);
         }
     }
 } 

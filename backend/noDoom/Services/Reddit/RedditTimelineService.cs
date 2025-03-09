@@ -56,7 +56,7 @@ namespace noDoom.Services.Reddit
                 }
             };
             
-            return _postEnricher.EnrichPostsWithMetrics(filteredTimeline);
+            return await _postEnricher.EnrichPostsWithMetrics(filteredTimeline, userId);
         }
     }
 }
