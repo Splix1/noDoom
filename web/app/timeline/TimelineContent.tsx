@@ -20,9 +20,13 @@ export function TimelineContent({ timelinePromise, onPostUpdate }: TimelineConte
   const [currentSlide, setCurrentSlide] = useState(1);
   const [swiper, setSwiper] = useState<any>(null);
   const [posts, setPosts] = useState<Post[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    timelinePromise.then(setPosts);
+    setIsLoading(true);
+    timelinePromise
+      .then(setPosts)
+      .finally(() => setIsLoading(false));
   }, [timelinePromise]);
 
   const handlePostUpdate = (updatedPost: Post) => {
@@ -34,7 +38,16 @@ export function TimelineContent({ timelinePromise, onPostUpdate }: TimelineConte
     onPostUpdate?.(updatedPost);
   };
 
-  // If no posts, show a message
+  // Show loading spinner while loading
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  // If no posts after loading, show the message
   if (!posts || posts.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] p-8 bg-card rounded-xl border shadow-sm">
@@ -64,7 +77,7 @@ export function TimelineContent({ timelinePromise, onPostUpdate }: TimelineConte
         className="w-full relative [&_.swiper-button-next]:!hidden [&_.swiper-button-prev]:!hidden"
         onSlideChange={(swiper) => setCurrentSlide(swiper.activeIndex + 1)}
       >
-        {posts.map((post, index) => (
+        {posts.map((post) => (
           <SwiperSlide key={post.id} className="flex items-center justify-center py-10">
             <div className="relative">
               <TimelinePost post={post} onUpdate={handlePostUpdate} />

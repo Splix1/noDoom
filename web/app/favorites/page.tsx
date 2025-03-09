@@ -31,7 +31,7 @@ function FavoritesErrorFallback({ error }: { error: Error }) {
 // Main Page Component
 export default function FavoritesPage() {
   const router = useRouter();
-  const [canShowFavorites, setCanShowFavorites] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [posts, setPosts] = useState<Post[]>([]);
 
   useEffect(() => {
@@ -45,13 +45,13 @@ export default function FavoritesPage() {
           return;
         }
 
-        // If we get here, we have a session
-        setCanShowFavorites(true);
         const favoritedPosts = await fetchFavoritesData();
         setPosts(favoritedPosts);
       } catch (error) {
         console.error('Session check failed:', error);
         router.replace('/login');
+      } finally {
+        setIsLoading(false);
       }
     }
 
@@ -65,7 +65,7 @@ export default function FavoritesPage() {
     }
   };
 
-  if (!canShowFavorites) {
+  if (isLoading) {
     return <FavoritesLoading />;
   }
 
@@ -73,9 +73,7 @@ export default function FavoritesPage() {
     <div className="container py-4">
       <FeedNavigation />
       <ErrorBoundary FallbackComponent={FavoritesErrorFallback}>
-        <Suspense fallback={<FavoritesLoading />}>
-          <TimelineContent timelinePromise={Promise.resolve(posts)} onPostUpdate={handlePostUpdate} />
-        </Suspense>
+        <TimelineContent timelinePromise={Promise.resolve(posts)} onPostUpdate={handlePostUpdate} />
       </ErrorBoundary>
     </div>
   );
