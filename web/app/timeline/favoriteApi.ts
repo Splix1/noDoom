@@ -2,7 +2,7 @@
 
 import { createClient } from '@/utils/supabase/client';
 
-export async function toggleFavorite(postId: string): Promise<boolean> {
+export async function toggleFavorite(postId: string, currentIsFavorite: boolean): Promise<boolean> {
   const supabase = createClient();
   const session = await supabase.auth.getSession();
   
@@ -15,7 +15,7 @@ export async function toggleFavorite(postId: string): Promise<boolean> {
   console.log('Request body:', JSON.stringify(requestBody));
 
   const response = await fetch(`http://localhost:5115/api/favorite`, {
-    method: 'POST',
+    method: currentIsFavorite ? 'DELETE' : 'POST',
     headers: {
       'Authorization': `Bearer ${session.data.session.access_token}`,
       'Content-Type': 'application/json',
