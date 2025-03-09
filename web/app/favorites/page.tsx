@@ -3,13 +3,14 @@
 import { Suspense, useEffect, useState } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { useRouter } from 'next/navigation';
-import { TimelineContent } from './TimelineContent';
-import { fetchTimelineData } from './timelineApi';
+import { TimelineContent } from '../timeline/TimelineContent';
+import { fetchFavoritesData } from './favoritesApi';
 import { createClient } from '@/utils/supabase/client';
 import { FeedNavigation } from '@/components/FeedNavigation';
+import { Post } from '../timeline/types';
 
 // Loading Component
-function TimelineLoading() {
+function FavoritesLoading() {
   return (
     <div className="flex items-center justify-center min-h-[400px]">
       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
@@ -18,7 +19,7 @@ function TimelineLoading() {
 }
 
 // Error Fallback Component
-function TimelineErrorFallback({ error }: { error: Error }) {
+function FavoritesErrorFallback({ error }: { error: Error }) {
   return (
     <div className="p-4 text-center">
       <h2 className="text-lg font-semibold mb-2">Something went wrong! Try again later.</h2>
@@ -28,12 +29,13 @@ function TimelineErrorFallback({ error }: { error: Error }) {
 }
 
 // Main Page Component
-export default function TimelinePage() {
+export default function FavoritesPage() {
   const router = useRouter();
-  const [canShowTimeline, setCanShowTimeline] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [posts, setPosts] = useState<Post[]>([]);
 
   useEffect(() => {
-    async function checkSessionAndConnections() {
+    async function checkSession() {
       const supabase = createClient();
       
       try {
@@ -43,43 +45,36 @@ export default function TimelinePage() {
           return;
         }
 
-        // Try to fetch timeline to check for connections
-        const response = await fetch('http://localhost:5115/api/timeline', {
-          headers: {
-            'Authorization': `Bearer ${session.access_token}`,
-          },
-          credentials: 'include'
-        });
-
-        const text = await response.text();
-        if (text.includes('No connections found')) {
-          router.replace('/settings');
-          return;
-        }
-
-        // If we get here, we have both session and connections
-        setCanShowTimeline(true);
+        const favoritedPosts = await fetchFavoritesData();
+        setPosts(favoritedPosts);
       } catch (error) {
         console.error('Session check failed:', error);
         router.replace('/login');
+      } finally {
+        setIsLoading(false);
       }
     }
 
-    checkSessionAndConnections();
+    checkSession();
   }, [router]);
 
-  if (!canShowTimeline) {
-    return <TimelineLoading />;
+  const handlePostUpdate = (updatedPost: Post) => {
+    if (!updatedPost.isFavorite) {
+      // Remove the unfavorited post from the list
+      setPosts(currentPosts => currentPosts.filter(post => post.id !== updatedPost.id));
+    }
+  };
+
+  if (isLoading) {
+    return <FavoritesLoading />;
   }
 
   return (
     <div className="container py-4">
       <FeedNavigation />
-      <ErrorBoundary FallbackComponent={TimelineErrorFallback}>
-        <Suspense fallback={<TimelineLoading />}>
-          <TimelineContent timelinePromise={fetchTimelineData()} />
-        </Suspense>
+      <ErrorBoundary FallbackComponent={FavoritesErrorFallback}>
+        <TimelineContent timelinePromise={Promise.resolve(posts)} onPostUpdate={handlePostUpdate} />
       </ErrorBoundary>
     </div>
   );
-}
+} 
