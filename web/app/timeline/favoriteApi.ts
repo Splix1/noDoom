@@ -93,8 +93,4 @@ export async function addFavorite(post: Post): Promise<boolean> {
     console.error('Error adding favorite:', error);
     throw error;
   }
-}
-
-export async function isFavorite(postId: string): Promise<boolean> {
-  // ... existing code ...
 } 

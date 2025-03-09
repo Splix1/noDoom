@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Keyboard } from 'swiper/modules';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
@@ -13,14 +13,26 @@ import 'swiper/css/pagination';
 
 interface TimelineContentProps {
   timelinePromise: Promise<Post[]>;
+  onPostUpdate?: (post: Post) => void;
 }
 
-export function TimelineContent({ timelinePromise }: TimelineContentProps) {
+export function TimelineContent({ timelinePromise, onPostUpdate }: TimelineContentProps) {
   const [currentSlide, setCurrentSlide] = useState(1);
   const [swiper, setSwiper] = useState<any>(null);
+  const [posts, setPosts] = useState<Post[]>([]);
   
-  // Use the hook to consume the promise
-  const posts = use(timelinePromise);
+  useEffect(() => {
+    timelinePromise.then(setPosts);
+  }, [timelinePromise]);
+
+  const handlePostUpdate = (updatedPost: Post) => {
+    setPosts(currentPosts => 
+      currentPosts.map(post => 
+        post.id === updatedPost.id ? updatedPost : post
+      )
+    );
+    onPostUpdate?.(updatedPost);
+  };
 
   // If no posts, show a message
   if (!posts || posts.length === 0) {
@@ -55,7 +67,7 @@ export function TimelineContent({ timelinePromise }: TimelineContentProps) {
         {posts.map((post, index) => (
           <SwiperSlide key={post.id} className="flex items-center justify-center py-10">
             <div className="relative">
-              <TimelinePost post={post} />
+              <TimelinePost post={post} onUpdate={handlePostUpdate} />
               
               {/* Navigation dots */}
               <div className="absolute top-8 right-8 flex gap-1 z-10">

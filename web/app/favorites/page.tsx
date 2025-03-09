@@ -7,6 +7,7 @@ import { TimelineContent } from '../timeline/TimelineContent';
 import { fetchFavoritesData } from './favoritesApi';
 import { createClient } from '@/utils/supabase/client';
 import { FeedNavigation } from '@/components/FeedNavigation';
+import { Post } from '../timeline/types';
 
 // Loading Component
 function FavoritesLoading() {
@@ -31,6 +32,7 @@ function FavoritesErrorFallback({ error }: { error: Error }) {
 export default function FavoritesPage() {
   const router = useRouter();
   const [canShowFavorites, setCanShowFavorites] = useState(false);
+  const [posts, setPosts] = useState<Post[]>([]);
 
   useEffect(() => {
     async function checkSession() {
@@ -43,7 +45,10 @@ export default function FavoritesPage() {
           return;
         }
 
+        // If we get here, we have a session
         setCanShowFavorites(true);
+        const favoritedPosts = await fetchFavoritesData();
+        setPosts(favoritedPosts);
       } catch (error) {
         console.error('Session check failed:', error);
         router.replace('/login');
@@ -52,6 +57,13 @@ export default function FavoritesPage() {
 
     checkSession();
   }, [router]);
+
+  const handlePostUpdate = (updatedPost: Post) => {
+    if (!updatedPost.isFavorite) {
+      // Remove the unfavorited post from the list
+      setPosts(currentPosts => currentPosts.filter(post => post.id !== updatedPost.id));
+    }
+  };
 
   if (!canShowFavorites) {
     return <FavoritesLoading />;
@@ -62,7 +74,7 @@ export default function FavoritesPage() {
       <FeedNavigation />
       <ErrorBoundary FallbackComponent={FavoritesErrorFallback}>
         <Suspense fallback={<FavoritesLoading />}>
-          <TimelineContent timelinePromise={fetchFavoritesData()} />
+          <TimelineContent timelinePromise={Promise.resolve(posts)} onPostUpdate={handlePostUpdate} />
         </Suspense>
       </ErrorBoundary>
     </div>

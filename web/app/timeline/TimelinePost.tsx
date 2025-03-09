@@ -11,6 +11,7 @@ import { toggleFavorite } from './favoriteApi';
 
 interface TimelinePostProps {
   post: Post;
+  onUpdate?: (post: Post) => void;
 }
 
 // Platform icons component
@@ -36,7 +37,7 @@ function PlatformIcon({ platform }: { platform: string }) {
   );
 }
 
-export function TimelinePost({ post }: TimelinePostProps) {
+export function TimelinePost({ post, onUpdate }: TimelinePostProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isFavorite, setIsFavorite] = useState(post.isFavorite || false);
   const [isUpdating, setIsUpdating] = useState(false);
@@ -46,6 +47,9 @@ export function TimelinePost({ post }: TimelinePostProps) {
     const newIsFavorite = await toggleFavorite(post, isFavorite);
     setIsFavorite(newIsFavorite);
     setIsUpdating(false);
+    
+    // Notify parent of the update
+    onUpdate?.({ ...post, isFavorite: newIsFavorite });
   };
 
   const hasMedia = post.media && post.media.length > 0;
@@ -65,7 +69,10 @@ export function TimelinePost({ post }: TimelinePostProps) {
             />
           )}
           <div className="flex-1">
-            <div className="font-semibold">{post.authorName}</div>
+            <div className="flex items-center space-x-2">
+              <span className="font-semibold">{post.authorName}</span>
+              <PlatformIcon platform={post.platform} />
+            </div>
             <div className="flex items-center space-x-1 text-sm text-muted-foreground">
               <span>@{post.authorHandle}</span>
               <span>·</span>

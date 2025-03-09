@@ -17,23 +17,24 @@ export function fetchFavoritesData(): Promise<Post[]> {
 
       const response = await fetch('http://localhost:5115/api/favorite/posts', {
         headers: {
-          'Authorization': `Bearer ${session?.access_token}`,
+          'Authorization': `Bearer ${session.access_token}`,
         },
         credentials: 'include'
       });
     
       if (!response.ok) {
-        const errorText = await response.text();
-        reject(`API error: ${response.status} ${errorText}`);
+        reject(`API error: ${response.status}`);
         return;
       }
 
       const result = await response.json();
-      
-      if (result.success) {
+      // Ensure we're returning an array of posts
+      if (Array.isArray(result)) {
+        resolve(result);
+      } else if (Array.isArray(result.data)) {
         resolve(result.data);
       } else {
-        reject(result.error);
+        resolve([]);
       }
     } catch (error) {
       reject(error);
