@@ -20,14 +20,8 @@ function TimelineLoading() {
 function TimelineErrorFallback({ error }: { error: Error }) {
   return (
     <div className="p-4 text-center">
-      <h2 className="text-lg font-semibold mb-2">Something went wrong!</h2>
+      <h2 className="text-lg font-semibold mb-2">Something went wrong! Try again later.</h2>
       <p className="text-muted-foreground mb-4">{error.message}</p>
-      <button 
-        onClick={() => window.location.reload()}
-        className="px-4 py-2 bg-primary text-primary-foreground rounded-md"
-      >
-        Try again
-      </button>
     </div>
   );
 }
