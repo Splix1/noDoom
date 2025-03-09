@@ -1,4 +1,4 @@
-export type Platform = 'reddit' | 'bluesky';
+export type Platform = 'bluesky' | 'reddit';
 
 export interface MediaContent {
   type: 'image' | 'link' | 'video';
@@ -18,8 +18,9 @@ export interface Post {
   createdAt: string;
   media?: MediaContent[];
   likeCount: number;
-} 
+  quotedPost?: Post;
+}
 
 export interface TimelinePostProps {
-    post: Post;
-  }
+  post: Post;
+}

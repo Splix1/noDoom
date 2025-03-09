@@ -34,6 +34,19 @@ export function TimelinePost({ post }: TimelinePostProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
+  // Filter out media from quoted posts
+  const mainPostMedia = post.media?.filter(media => {
+    // If there's no quoted post, keep all media
+    if (!post.quotedPost) return true;
+    
+    // If this is a quoted post's media URL, filter it out
+    const isQuotedMedia = post.quotedPost.media?.some(
+      quotedMedia => quotedMedia.url === media.url
+    );
+    
+    return !isQuotedMedia;
+  });
+
   return (
     <div className="relative flex flex-col bg-card rounded-xl border shadow-sm w-full max-w-3xl mx-auto">
       <div className="p-8">
@@ -63,12 +76,34 @@ export function TimelinePost({ post }: TimelinePostProps) {
         </div>
 
         <div className="h-[500px] rounded-xl overflow-hidden">
-          {post.media && post.media.length > 0 ? (
-            <MediaGallery 
-              media={post.media} 
-              alt={post.content}
-              onModalChange={setIsModalOpen}
-            />
+          {mainPostMedia && mainPostMedia.length > 0 ? (
+            <div className="h-full">
+              {post.content && (
+                <div className="px-2 pb-4">
+                  <div className={cn(
+                    "text-base leading-relaxed",
+                    !isExpanded && "line-clamp-2"
+                  )}>
+                    {post.content}
+                  </div>
+                  {post.content.length > 280 && (
+                    <button 
+                      onClick={() => setIsExpanded(!isExpanded)}
+                      className="text-sm text-primary hover:underline mt-1"
+                    >
+                      {isExpanded ? 'Show less' : 'Show more'}
+                    </button>
+                  )}
+                </div>
+              )}
+              <div className="h-full">
+                <MediaGallery 
+                  media={mainPostMedia} 
+                  alt={post.content || ''}
+                  onModalChange={setIsModalOpen}
+                />
+              </div>
+            </div>
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-accent/10 backdrop-blur-sm p-8">
               <div className="max-w-2xl">

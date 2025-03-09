@@ -42,10 +42,9 @@ namespace noDoom.Services.Bluesky
 
             var timeline = await response.Content.ReadFromJsonAsync<BlueskyTimelineResponse>();
 
-            
-            // Filter out replies, remove duplicates, and get top 15 by like count
+            // Filter out replies and quotes, remove duplicates, and get top 15 by like count
             var uniquePosts = timeline.Feed
-                .Where(feed => feed.Reply == null)
+                .Where(feed => feed.Reply == null && feed.Post.Record.Embed?.Record == null)
                 .GroupBy(feed => feed.Post.Uri)
                 .Select(group => group.First())
                 .OrderByDescending(feed => feed.Post.IndexedAt)

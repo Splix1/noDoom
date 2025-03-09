@@ -47,15 +47,15 @@ export function MediaGallery({ media, alt, onModalChange, isQuoted = false }: Me
             )}
           >
             {item.type === 'image' ? (
-              <div className="relative w-full h-full">
+              <div className="relative w-full h-full flex items-center justify-center">
                 {item.url && item.url.startsWith('http') ? (
                   <Image
                     src={item.url}
                     alt={alt}
                     fill
                     className={cn(
-                      "object-contain cursor-pointer",
-                      !isQuoted && "object-cover"
+                      "cursor-pointer",
+                      media.length === 1 ? "object-contain" : "object-cover"
                     )}
                     sizes="(max-width: 1280px) 100vw, 1024px"
                     onClick={() => {
