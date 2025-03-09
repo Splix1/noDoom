@@ -80,20 +80,24 @@ export function TimelineContent({ timelinePromise }: TimelineContentProps) {
       {/* Navigation buttons */}
       {posts.length > 1 && (
         <>
-          <button 
-            onClick={() => swiper?.slidePrev()}
-            className="absolute left-0 top-1/2 -translate-y-1/2 z-10 p-3 rounded-full bg-foreground/20 backdrop-blur-sm text-white hover:bg-foreground/30 transition-colors"
-            aria-label="Previous post"
-          >
-            <ChevronLeft className="h-6 w-6 rotate-0" />
-          </button>
-          <button 
-            onClick={() => swiper?.slideNext()}
-            className="absolute right-0 top-1/2 -translate-y-1/2 z-10 p-3 rounded-full bg-foreground/20 backdrop-blur-sm text-white hover:bg-foreground/30 transition-colors"
-            aria-label="Next post"
-          >
-            <ChevronRight className="h-6 w-6 rotate-0" />
-          </button>
+          {currentSlide > 1 && (
+            <button 
+              onClick={() => swiper?.slidePrev()}
+              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 p-3 rounded-full bg-foreground/20 backdrop-blur-sm text-white hover:bg-foreground/30 transition-colors"
+              aria-label="Previous post"
+            >
+              <ChevronLeft className="h-6 w-6 rotate-0" />
+            </button>
+          )}
+          {currentSlide < posts.length && (
+            <button 
+              onClick={() => swiper?.slideNext()}
+              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 p-3 rounded-full bg-foreground/20 backdrop-blur-sm text-white hover:bg-foreground/30 transition-colors"
+              aria-label="Next post"
+            >
+              <ChevronRight className="h-6 w-6 rotate-0" />
+            </button>
+          )}
         </>
       )}
     </div>
