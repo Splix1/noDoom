@@ -39,24 +39,13 @@ function PlatformIcon({ platform }: { platform: string }) {
 export function TimelinePost({ post }: TimelinePostProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isFavorite, setIsFavorite] = useState(post.isFavorite || false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
 
-  const handleFavorite = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (isLoading) return;
-    
-    setIsLoading(true);
-    try {
-      const newIsFavorite = await toggleFavorite(post.id, isFavorite);
-      setIsFavorite(newIsFavorite);
-    } catch (error) {
-      // Keep this error log for debugging purposes
-      console.error('Failed to toggle favorite:', error);
-    } finally {
-      setIsLoading(false);
-    }
+  const handleFavoriteClick = async () => {
+    setIsUpdating(true);
+    const newIsFavorite = await toggleFavorite(post, isFavorite);
+    setIsFavorite(newIsFavorite);
+    setIsUpdating(false);
   };
 
   const hasMedia = post.media && post.media.length > 0;
@@ -91,13 +80,13 @@ export function TimelinePost({ post }: TimelinePostProps) {
         {/* Favorite button - positioned at the top */}
         <div className="absolute right-4 top-1 z-10">
           <button
-            onClick={handleFavorite}
-            disabled={isLoading}
+            onClick={handleFavoriteClick}
+            disabled={isUpdating}
             className={cn(
               "p-2 rounded-full transition-colors bg-background/80 backdrop-blur-sm",
               "hover:bg-primary/10",
               "focus:outline-none focus:ring-2 focus:ring-primary/20",
-              isLoading && "opacity-50 cursor-not-allowed"
+              isUpdating && "opacity-50 cursor-not-allowed"
             )}
           >
             <Heart

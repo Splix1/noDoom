@@ -1,8 +1,9 @@
 'use client';
 
 import { createClient } from '@/utils/supabase/client';
+import { Post } from './types';
 
-export async function toggleFavorite(postId: string, currentIsFavorite: boolean): Promise<boolean> {
+export async function toggleFavorite(post: Post, currentIsFavorite: boolean): Promise<boolean> {
   const supabase = createClient();
   const session = await supabase.auth.getSession();
   
@@ -10,25 +11,29 @@ export async function toggleFavorite(postId: string, currentIsFavorite: boolean)
     throw new Error('No session found');
   }
 
-  const requestBody = { postId };
+  if (currentIsFavorite) {
+    // Remove favorite
+    const response = await fetch(`http://localhost:5115/api/favorite`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${session.data.session.access_token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ postId: post.id }),
+      credentials: 'include'
+    });
 
-  const response = await fetch(`http://localhost:5115/api/favorite`, {
-    method: currentIsFavorite ? 'DELETE' : 'POST',
-    headers: {
-      'Authorization': `Bearer ${session.data.session.access_token}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(requestBody),
-    credentials: 'include'
-  });
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error('Failed to remove favorite');
+    }
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error('Failed to toggle favorite');
+    const data = await response.json();
+    return data.isFavorite;
+  } else {
+    // Add favorite
+    return addFavorite(post);
   }
-
-  const data = await response.json();
-  return data.isFavorite;
 }
 
 export async function checkIsFavorite(postId: string): Promise<boolean> {
@@ -53,4 +58,43 @@ export async function checkIsFavorite(postId: string): Promise<boolean> {
 
   const data = await response.json();
   return data.isFavorite;
+}
+
+export async function addFavorite(post: Post): Promise<boolean> {
+  const supabase = createClient();
+  
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      throw new Error("No session found");
+    }
+
+    const response = await fetch('http://localhost:5115/api/favorite', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session.access_token}`,
+      },
+      body: JSON.stringify({
+        postId: post.id,
+        postDetails: post
+      }),
+      credentials: 'include'
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to add favorite: ${response.status}`);
+    }
+
+    const result = await response.json();
+    return result.isFavorite;
+  } catch (error) {
+    console.error('Error adding favorite:', error);
+    throw error;
+  }
+}
+
+export async function isFavorite(postId: string): Promise<boolean> {
+  // ... existing code ...
 } 

@@ -23,6 +23,30 @@ public class FavoriteController : ControllerBase
         _redisService = redisService;
     }
 
+    [HttpGet("posts")]
+    public async Task<IActionResult> GetFavoritedPosts()
+    {
+        var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new UnauthorizedAccessException());
+        
+        // Try to get from Redis first
+        var cachedPosts = await _redisService.GetCachedTimelinePostsAsync(userId.ToString(), "favorites");
+        if (cachedPosts != null)
+        {
+            return Ok(new { success = true, data = cachedPosts });
+        }
+
+        // If not in Redis, get from database
+        var posts = await _favoriteRepository.GetFavoritedPostsAsync(userId);
+        
+        // Cache the posts
+        if (posts.Any())
+        {
+            await _redisService.CacheTimelinePostsAsync(userId.ToString(), "favorites", posts);
+        }
+
+        return Ok(new { success = true, data = posts });
+    }
+
     [HttpGet]
     public async Task<IActionResult> IsFavorite([FromQuery] string postId)
     {
@@ -42,9 +66,9 @@ public class FavoriteController : ControllerBase
         }
 
         var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new UnauthorizedAccessException());
-        await _favoriteRepository.AddFavoriteAsync(userId, request.PostId);
+        await _favoriteRepository.AddFavoriteAsync(userId, request.PostId, request.PostDetails);
 
-        // Update Redis cache
+        // Update Redis cache for timeline
         var cachedPosts = await _redisService.GetCachedTimelinePostsAsync(userId.ToString(), "timeline");
         if (cachedPosts != null)
         {
@@ -55,6 +79,9 @@ public class FavoriteController : ControllerBase
                 await _redisService.UpdateCachedTimelinePostsAsync(userId.ToString(), "timeline", cachedPosts);
             }
         }
+
+        // Update Redis cache for favorites
+        await _redisService.RemoveAsync($"{userId}:favorites");
 
         var isFavorite = await _favoriteRepository.IsFavoriteAsync(userId, request.PostId);
         return Ok(new { isFavorite });
@@ -67,7 +94,7 @@ public class FavoriteController : ControllerBase
         var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? throw new UnauthorizedAccessException());
         await _favoriteRepository.RemoveFavoriteAsync(userId, request.PostId);
 
-        // Update Redis cache
+        // Update Redis cache for timeline
         var cachedPosts = await _redisService.GetCachedTimelinePostsAsync(userId.ToString(), "timeline");
         if (cachedPosts != null)
         {
@@ -79,6 +106,9 @@ public class FavoriteController : ControllerBase
             }
         }
 
+        // Update Redis cache for favorites
+        await _redisService.RemoveAsync($"{userId}:favorites");
+
         return Ok(new { isFavorite = false });
     }
 }
@@ -86,6 +116,7 @@ public class FavoriteController : ControllerBase
 public class AddFavoriteRequest
 {
     public string PostId { get; set; }
+    public UnifiedPost PostDetails { get; set; }
 }
 
 public class RemoveFavoriteRequest

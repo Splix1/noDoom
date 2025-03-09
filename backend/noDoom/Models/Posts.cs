@@ -16,5 +16,22 @@ public class Post : BaseModel {
 
     [Column("URL")]
     public string URL { get; set; }
-    
+
+    [Column("content")]
+    public string Content { get; set; }
+
+    [Column("created_at")]
+    public DateTime CreatedAt { get; set; }
+
+    [Column("media")]
+    public string Media { get; set; }
+
+    [Column("author_name")]
+    public string AuthorName { get; set; }
+
+    [Column("author_handle")]
+    public string AuthorHandle { get; set; }
+
+    [Column("author_avatar")]
+    public string AuthorAvatar { get; set; }
 }
