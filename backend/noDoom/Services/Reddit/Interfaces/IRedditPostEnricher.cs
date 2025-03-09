@@ -2,7 +2,7 @@ namespace noDoom.Services.Reddit.Interfaces
 {
     public interface IRedditPostEnricher
     {
-        List<UnifiedPost> EnrichPostsWithMetrics(RedditTimelineResponse posts);
+        Task<List<UnifiedPost>> EnrichPostsWithMetrics(RedditTimelineResponse posts, Guid userId);
         List<MediaContent> CreateMediaContent(RedditPost post);
     }
 }
