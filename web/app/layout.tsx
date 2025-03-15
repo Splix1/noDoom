@@ -15,7 +15,7 @@ const defaultUrl = process.env.VERCEL_URL
 export const metadata = {
   metadataBase: new URL(defaultUrl),
   title: "noDoom",
-  description: "A mindful social media aggregator that prevents doomscrolling by providing curated, time-limited feeds from multiple platforms.",
+  description: "A healthier way to consume social media.",
 };
 
 const geistSans = Geist({
