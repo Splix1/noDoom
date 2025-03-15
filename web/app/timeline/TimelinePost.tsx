@@ -55,9 +55,9 @@ export function TimelinePost({ post, onUpdate }: TimelinePostProps) {
   const hasMedia = post.media && post.media.length > 0;
 
   return (
-    <article className="bg-card rounded-lg overflow-hidden">
+    <article className="bg-card rounded-lg overflow-hidden border border-border/40 shadow-sm hover:shadow-md transition-shadow duration-200">
       {/* Header with author info */}
-      <div className="p-4">
+      <div className="p-4 border-b border-border/20">
         <div className="flex items-center space-x-2">
           {post.authorAvatar && (
             <Image
@@ -65,7 +65,7 @@ export function TimelinePost({ post, onUpdate }: TimelinePostProps) {
               alt={post.authorName}
               width={40}
               height={40}
-              className="rounded-full"
+              className="rounded-full ring-2 ring-background/80"
             />
           )}
           <div className="flex-1">
@@ -84,14 +84,14 @@ export function TimelinePost({ post, onUpdate }: TimelinePostProps) {
 
       {/* Content area with navigation dots and favorite button */}
       <div className="relative">
-        {/* Favorite button - positioned at the top */}
-        <div className="absolute right-4 top-1 z-10">
+        {/* Favorite button - positioned in the center and higher */}
+        <div className="absolute left-1/2 top-0 z-10 transform -translate-x-1/2 -translate-y-full">
           <button
             onClick={handleFavoriteClick}
             disabled={isUpdating}
             className={cn(
-              "p-2 rounded-full transition-colors bg-background/80 backdrop-blur-sm",
-              "hover:bg-primary/10",
+              "p-2 rounded-full transition-colors bg-background/80 backdrop-blur-sm shadow-sm",
+              "hover:bg-primary/10 hover:shadow-md",
               "focus:outline-none focus:ring-2 focus:ring-primary/20",
               isUpdating && "opacity-50 cursor-not-allowed"
             )}
@@ -106,6 +106,15 @@ export function TimelinePost({ post, onUpdate }: TimelinePostProps) {
         </div>
 
         <div className="h-[500px]">
+          {/* Display text content above media if both exist */}
+          {post.content && hasMedia && (
+            <div className="p-5 pb-2">
+              <div className="text-base leading-relaxed">
+                {post.content}
+              </div>
+            </div>
+          )}
+          
           {hasMedia ? (
             <MediaGallery 
               media={post.media!}
@@ -113,7 +122,7 @@ export function TimelinePost({ post, onUpdate }: TimelinePostProps) {
               onModalChange={setIsModalOpen}
             />
           ) : (
-            <div className="h-full flex items-center justify-center p-6">
+            <div className="h-full flex items-center justify-center p-6 bg-muted/5">
               <div className="max-w-2xl text-center space-y-6">
                 {post.content}
               </div>
