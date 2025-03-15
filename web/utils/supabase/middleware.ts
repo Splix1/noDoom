@@ -44,12 +44,42 @@ export const updateSession = async (request: NextRequest) => {
       return NextResponse.redirect(new URL("/sign-in", request.url));
     }
 
+    // redirect to sign-in if user is not logged in
     if (request.nextUrl.pathname === "/" && user.error) {
       return NextResponse.redirect(new URL("/sign-in", request.url));
     }
 
+    // redirect to timeline if user is logged in
     if (request.nextUrl.pathname === "/" && !user.error) {
       return NextResponse.redirect(new URL("/timeline", request.url));
+    }
+
+    // Handle non-existent routes based on authentication status
+    const validRoutes = [
+      "/timeline",
+      "/settings",
+      "/protected",
+      "/favorites",
+      "/sign-in",
+      "/sign-up",
+      "/forgot-password",
+      "/_next",
+      "/api",
+    ];
+
+    // Check if the current path starts with any valid route
+    const isValidRoute = validRoutes.some(route => 
+      request.nextUrl.pathname.startsWith(route)
+    );
+
+    // If not a valid route and user is authenticated, redirect to timeline
+    if (!isValidRoute && !user.error) {
+      return NextResponse.redirect(new URL("/timeline", request.url));
+    }
+
+    // If not a valid route and user is not authenticated, redirect to sign-in
+    if (!isValidRoute && user.error) {
+      return NextResponse.redirect(new URL("/sign-in", request.url));
     }
 
     return response;
