@@ -61,7 +61,26 @@ class TestHomePage:
         
         # Act
         home_page.open()
-        # TODO: Add login steps here
+        # Login with test credentials from environment variables
+        home_page.login()
         
         # Assert
         assert home_page.is_logged_in(), "User should be logged in"
+        
+    def test_login_form_input(self, driver, base_url):
+        """Test that email and password can be entered in the login form."""
+        # Arrange
+        home_page = HomePage(driver, base_url)
+        test_email = "test@example.com"
+        test_password = "password123"
+        
+        # Act
+        home_page.open()
+        home_page.enter_email(test_email)
+        home_page.enter_password(test_password)
+        
+        # Assert
+        email_element = driver.find_element(*HomePage.EMAIL_INPUT)
+        password_element = driver.find_element(*HomePage.PASSWORD_INPUT)
+        assert email_element.get_attribute("value") == test_email, "Email input should contain the test email"
+        assert password_element.get_attribute("value") == test_password, "Password input should contain the test password"
