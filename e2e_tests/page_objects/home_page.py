@@ -11,8 +11,8 @@ class HomePage(BasePage):
     # Locators
     TITLE = (By.CSS_SELECTOR, "h1")
     NAV_LINKS = (By.CSS_SELECTOR, "nav a")
-    LOGIN_BUTTON = (By.XPATH, "//a[contains(@href, 'login') or contains(@href, 'signin') or contains(@href, 'sign-in') or contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'sign in') or contains(translate(., 'ABCDEFGHIJKLMNOPQRSTUVWXYZ', 'abcdefghijklmnopqrstuvwxyz'), 'login')]")
-    SIGNUP_BUTTON = (By.CSS_SELECTOR, "a[href*='signup']")
+    LOGIN_BUTTON = (By.ID, "sign-in-button")
+    SIGNUP_BUTTON = (By.ID, "sign-up-button")
     
     def __init__(self, driver, base_url="http://localhost:3000"):
         """

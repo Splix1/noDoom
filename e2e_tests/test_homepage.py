@@ -41,6 +41,17 @@ class TestHomePage:
         
         # Assert
         assert home_page.is_element_present(HomePage.LOGIN_BUTTON), "Login button should be present"
+
+    def test_signup_button_present(self, driver, base_url):
+        """Test that the signup button is present on the home page."""
+        # Arrange
+        home_page = HomePage(driver, base_url)
+        
+        # Act
+        home_page.open()
+        
+        # Assert
+        assert home_page.is_element_present(HomePage.SIGNUP_BUTTON), "Signup button should be present"
     
     @pytest.mark.skip(reason="This test requires a logged-in user")
     def test_user_profile_when_logged_in(self, driver, base_url):
