@@ -122,7 +122,7 @@ export function TimelinePost({ post, onUpdate }: TimelinePostProps) {
               onModalChange={setIsModalOpen}
             />
           ) : (
-            <div className="h-full flex items-center justify-center p-6 bg-muted/5">
+            <div className="h-full flex items-center justify-center p-6 bg-background">
               <div className="max-w-2xl text-center space-y-6">
                 {post.content}
               </div>

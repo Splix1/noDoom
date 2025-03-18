@@ -39,7 +39,7 @@ export function MediaGallery({ media, alt, onModalChange, isQuoted = false }: Me
           <div
             key={index}
             className={cn(
-              "relative overflow-hidden bg-accent/10",
+              "relative overflow-hidden bg-background",
               getGridClassName(Math.min(media.length, 4), index),
               media.length === 2 ? (isQuoted ? "h-[75px]" : "h-full") : "",
               isQuoted && media.length === 1 ? "h-[150px]" : "",
@@ -64,7 +64,7 @@ export function MediaGallery({ media, alt, onModalChange, isQuoted = false }: Me
                     }}
                   />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-accent/10">
+                  <div className="w-full h-full flex items-center justify-center bg-background">
                     <span className="text-sm text-muted-foreground">Invalid image URL</span>
                   </div>
                 )}
