@@ -7,6 +7,7 @@ import { TimelineContent } from './TimelineContent';
 import { fetchTimelineData } from './timelineApi';
 import { createClient } from '@/utils/supabase/client';
 import { FeedNavigation } from '@/components/FeedNavigation';
+import { API_URL } from '@/utils/config';
 
 // Loading Component
 function TimelineLoading() {
@@ -44,7 +45,7 @@ export default function TimelinePage() {
         }
 
         // Try to fetch timeline to check for connections
-        const response = await fetch('http://localhost:5115/api/timeline', {
+        const response = await fetch(`${API_URL}/api/timeline`, {
           headers: {
             'Authorization': `Bearer ${session.access_token}`,
           },

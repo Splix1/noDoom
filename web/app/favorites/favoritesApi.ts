@@ -2,6 +2,7 @@
 
 import { createClient } from '@/utils/supabase/client';
 import { Post } from '../timeline/types';
+import { API_URL } from '@/utils/config';
 
 export function fetchFavoritesData(): Promise<Post[]> {
   const supabase = createClient();
@@ -15,7 +16,7 @@ export function fetchFavoritesData(): Promise<Post[]> {
         return;
       }
 
-      const response = await fetch('http://localhost:5115/api/favorite/posts', {
+      const response = await fetch(`${API_URL}/api/favorite/posts`, {
         headers: {
           'Authorization': `Bearer ${session.access_token}`,
         },

@@ -1,6 +1,25 @@
 version: '3.8'
 
 services:
+  frontend:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+        - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+        - API_URL=http://api:8080
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+      - API_URL=http://api:8080
+    depends_on:
+      - api
+
   api:
     build:
       context: ./backend
@@ -9,6 +28,11 @@ services:
       - "5115:8080"
     environment:
       - Redis__ConnectionString=redis:6379
+      - Supabase__Url=${SUPABASE_URL}
+      - Supabase__Key=${SUPABASE_ANON_KEY}
+      - Supabase__JWT-secret=${SUPABASE_JWT_SECRET}
+      - Authentication__ValidIssuer=${AUTH_VALID_ISSUER}
+      - Authentication__ValidAudience=${AUTH_VALID_AUDIENCE}
     depends_on:
       - redis
 

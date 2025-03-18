@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Switch } from "@/components/ui/switch";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { ConnectionsSection } from "@/components/connections-section";
+import { API_URL } from "@/utils/config";
 
 interface Connection {
   platform: string;
@@ -26,11 +27,13 @@ export default async function SettingsPage() {
   const accessToken = session?.access_token;
 
   // Get connection states from API
-  const response = await fetch(`http://localhost:5115/api/connections`, {
+  const response = await fetch(`${API_URL}/api/connections`, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
   });
+
+  console.log('response',response);
   
   const connections = await response.json() as Connection[];
 

@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { BlueskyCard } from '@/components/connection-cards/bluesky-card';
 import { RedditCard } from '@/components/connection-cards/reddit-card';
 import { createClient } from '@/utils/supabase/client';
+import { API_URL } from '@/utils/config';
 
 interface Connection {
   platform: string;
@@ -27,7 +28,7 @@ export function ConnectionsSection({ initialConnections }: { initialConnections:
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) return;
     
-    const response = await fetch(`http://localhost:5115/api/connections`, {
+    const response = await fetch(`${API_URL}/api/connections`, {
       headers: {
         Authorization: `Bearer ${session.access_token}`,
       },

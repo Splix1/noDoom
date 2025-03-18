@@ -2,6 +2,7 @@
 
 import { createClient } from '@/utils/supabase/client';
 import { Post } from './types';
+import { API_URL } from '@/utils/config';
 
 export async function toggleFavorite(post: Post, currentIsFavorite: boolean): Promise<boolean> {
   const supabase = createClient();
@@ -13,7 +14,7 @@ export async function toggleFavorite(post: Post, currentIsFavorite: boolean): Pr
 
   if (currentIsFavorite) {
     // Remove favorite
-    const response = await fetch(`http://localhost:5115/api/favorite`, {
+    const response = await fetch(`${API_URL}/api/favorite`, {
       method: 'DELETE',
       headers: {
         'Authorization': `Bearer ${session.data.session.access_token}`,
@@ -44,7 +45,7 @@ export async function checkIsFavorite(postId: string): Promise<boolean> {
     throw new Error('No session found');
   }
 
-  const response = await fetch(`http://localhost:5115/api/favorite?postId=${postId}`, {
+  const response = await fetch(`${API_URL}/api/favorite?postId=${postId}`, {
     headers: {
       'Authorization': `Bearer ${session.data.session.access_token}`,
     },
@@ -70,7 +71,7 @@ export async function addFavorite(post: Post): Promise<boolean> {
       throw new Error("No session found");
     }
 
-    const response = await fetch('http://localhost:5115/api/favorite', {
+    const response = await fetch(`${API_URL}/api/favorite`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

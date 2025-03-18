@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { createClient } from "@/utils/supabase/client";
+import { API_URL } from "@/utils/config";
 
 interface BlueskyConnectModalProps {
     isOpen: boolean;
@@ -40,7 +41,7 @@ export function BlueskyConnectModal({ isOpen, onClose, onConnect }: BlueskyConne
             console.log('Auth token:', session.access_token);
 
             // Make the POST request to connect Bluesky
-            const response = await fetch('http://localhost:5115/api/bluesky/connect', {
+            const response = await fetch(`${API_URL}/api/bluesky/connect`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

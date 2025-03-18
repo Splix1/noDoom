@@ -2,6 +2,7 @@
 import { BlueskyConnectModal } from '@/components/bluesky-connect-modal';
 import { useState } from 'react';
 import { createClient } from '@/utils/supabase/client';
+import { API_URL } from '@/utils/config';
 
 interface BlueskyCardProps {
   isConnected: boolean;
@@ -25,7 +26,7 @@ export function BlueskyCard({ isConnected: initialIsConnected, handle: initialHa
           throw new Error('Not authenticated');
         }
 
-        const response = await fetch('http://localhost:5115/api/bluesky/disconnect', { 
+        const response = await fetch(`${API_URL}/api/bluesky/disconnect`, { 
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${session.access_token}`,

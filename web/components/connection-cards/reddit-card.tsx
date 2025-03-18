@@ -1,6 +1,7 @@
 'use client';
 
 import { Switch } from "@/components/ui/switch";
+import { API_URL } from '@/utils/config';
 
 interface RedditCardProps {
   isConnected: boolean;
@@ -11,11 +12,11 @@ interface RedditCardProps {
 export function RedditCard({ isConnected, onStatusChange }: RedditCardProps) {
   const handleConnect = async () => {
     if (isConnected) {
-      await fetch('/api/reddit/disconnect', { method: 'POST' });
+      await fetch(`${API_URL}/api/reddit/disconnect`, { method: 'POST' });
       if (onStatusChange) onStatusChange();
     } else {
       // Implement Reddit OAuth flow
-      window.location.href = '/api/reddit/connect';
+      window.location.href = `${API_URL}/api/reddit/connect`;
     }
   };
 

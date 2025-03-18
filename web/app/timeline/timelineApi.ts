@@ -2,6 +2,7 @@
 
 import { createClient } from '@/utils/supabase/client';
 import { Post } from './types';
+import { API_URL } from '@/utils/config';
 
 // Format time ago helper function
 export const formatTimeAgo = (dateString: string) => {
@@ -122,7 +123,7 @@ export function fetchTimelineData(): Promise<Post[]> {
         return;
       }
 
-      const response = await fetch('http://localhost:5115/api/timeline', {
+      const response = await fetch(`${API_URL}/api/timeline`, {
         headers: {
           'Authorization': `Bearer ${session?.access_token}`,
         },
