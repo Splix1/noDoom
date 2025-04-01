@@ -39,22 +39,28 @@ export default function Auth() {
       <View style={[styles.verticallySpaced, styles.mt20]}>
         <Input
           label="Email"
-          leftIcon={{ type: 'font-awesome', name: 'envelope' }}
+          leftIcon={{ type: 'font-awesome', name: 'envelope', color: '#ffffff' }}
           onChangeText={(text) => setEmail(text)}
           value={email}
           placeholder="email@address.com"
           autoCapitalize={'none'}
+          inputStyle={{ color: '#ffffff' }}
+          labelStyle={{ color: '#ffffff' }}
+          placeholderTextColor="#808080"
         />
       </View>
       <View style={styles.verticallySpaced}>
         <Input
           label="Password"
-          leftIcon={{ type: 'font-awesome', name: 'lock' }}
+          leftIcon={{ type: 'font-awesome', name: 'lock', color: '#ffffff' }}
           onChangeText={(text) => setPassword(text)}
           value={password}
           secureTextEntry={true}
           placeholder="Password"
           autoCapitalize={'none'}
+          inputStyle={{ color: '#ffffff' }}
+          labelStyle={{ color: '#ffffff' }}
+          placeholderTextColor="#808080"
         />
       </View>
       <View style={[styles.verticallySpaced, styles.mt20]}>
