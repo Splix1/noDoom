@@ -2,7 +2,7 @@ import 'react-native-url-polyfill/auto'
 import { useState, useEffect } from 'react'
 import { supabase } from './app/lib/supabase'
 import Auth from './app/components/Auth'
-import { View, Text, SafeAreaView } from 'react-native'
+import { Text, SafeAreaView, StyleSheet, View } from 'react-native'
 import { Session } from '@supabase/supabase-js'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { StatusBar } from 'expo-status-bar'
@@ -22,12 +22,28 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <StatusBar style="light" />
-      <SafeAreaView>
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.safeArea}>
         {
-          !session ? <Auth /> : <Text style={{ color: '#ffffff' }}>Welcome back, {session.user.email}</Text>
+          !session ? <Auth /> : <Text style={styles.text}>Welcome back, {session.user.email}</Text>
         }
+        </View>
       </SafeAreaView>
     </SafeAreaProvider>
     
   )
 }
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#000000',
+  },
+  text: {
+    color: '#ffffff',
+    fontSize: 20,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginTop: 20,
+  }
+})
