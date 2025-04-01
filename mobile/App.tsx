@@ -6,6 +6,8 @@ import { Text, SafeAreaView, StyleSheet, View } from 'react-native'
 import { Session } from '@supabase/supabase-js'
 import { SafeAreaProvider } from 'react-native-safe-area-context'
 import { StatusBar } from 'expo-status-bar'
+import TabNavigator from './app/navigation/TabNavigator'
+import { NavigationContainer } from '@react-navigation/native'
 export default function App() {
   const [session, setSession] = useState<Session | null>(null)
 
@@ -20,17 +22,18 @@ export default function App() {
   }, [])
 
   return (
+    <NavigationContainer>
     <SafeAreaProvider>
       <StatusBar style="light" />
       <SafeAreaView style={styles.safeArea}>
         <View style={styles.safeArea}>
         {
-          !session ? <Auth /> : <Text style={styles.text}>Welcome back, {session.user.email}</Text>
+          !session ? <Auth /> : <TabNavigator />
         }
         </View>
       </SafeAreaView>
     </SafeAreaProvider>
-    
+    </NavigationContainer>
   )
 }
 
