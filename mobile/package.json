@@ -31,5 +31,8 @@
     "@types/react": "~18.3.12",
     "typescript": "^5.3.3"
   },
+  "overrides": {
+    "image-size": "^1.2.1"
+  },
   "private": true
 }
